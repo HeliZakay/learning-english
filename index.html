@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My English Words</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        h1 {
+            color: #3730A3;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .card-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+            padding: 32px 28px;
+            text-align: center;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            margin-bottom: 28px;
+            object-fit: cover;
+        }
+
+        .word {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #4338CA;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .sentence {
+            font-size: 1.3rem;
+            color: #4B5563;
+            line-height: 1.5;
+            padding: 0 4px;
+            flex: 1;
+        }
+
+        .progress {
+            margin-top: 24px;
+            font-size: 1.1rem;
+            color: #6366F1;
+            font-weight: 600;
+        }
+
+        .next-btn {
+            margin-top: 28px;
+            width: 100%;
+            max-width: 400px;
+            padding: 18px 32px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .next-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>My English Words</h1>
+
+    <div class="card-container">
+        <div class="card">
+            <img class="card-image" id="cardImage" src="" alt="">
+            <div class="word" id="word"></div>
+            <div class="sentence" id="sentence"></div>
+        </div>
+    </div>
+
+    <div class="progress" id="progress"></div>
+
+    <button class="next-btn" id="nextBtn">Next →</button>
+
+    <script>
+        const words = [
+            { word: "Drizzle", sentence: "Take an umbrella — there is a light drizzle outside.", image: "images/drizzle.png" },
+            { word: "Intermittent", sentence: "The Wi-Fi signal was intermittent — it kept cutting out and coming back.", image: "images/intermittent.png" },
+            { word: "Likely", sentence: "She is likely to get the job — her interview went very well.", image: "images/likely.png" },
+            { word: "Shortchange", sentence: "The cashier tried to shortchange me by giving back less money.", image: "images/shortchange.png" },
+            { word: "Settle", sentence: "After years of traveling, she decided to settle in a quiet town.", image: "images/settle.png" },
+            { word: "Rose-tinted", sentence: "He sees the past through rose-tinted glasses, as if everything was perfect.", image: "images/rose-tinted.png" },
+            { word: "Soluble", sentence: "Sugar is soluble — it disappears when you stir it into water.", image: "images/soluble.png" },
+            { word: "Like water off a duck's back", sentence: "I told him he was wrong, but it was like water off a duck's back — he didn't care at all.", image: "images/like-water-off-a-ducks-back.png" },
+            { word: "Hyperbole", sentence: "'I've told you a million times!' is a hyperbole — a big exaggeration.", image: "images/hyperbole.png" },
+            { word: "Distribute", sentence: "The teacher will distribute the books to all the students.", image: "images/distribute.png" },
+            { word: "Shortage", sentence: "There is a shortage of eggs in the shops this week.", image: "images/shortage.png" },
+            { word: "Memorize", sentence: "I need to memorize ten new English words every week.", image: "images/memorize.png" },
+            { word: "Slither", sentence: "The snake slithered silently through the grass.", image: "images/slither.png" },
+            { word: "Soar", sentence: "The eagle soared high above the mountains.", image: "images/soar.png" },
+            { word: "Whale", sentence: "We saw a huge whale jumping out of the ocean.", image: "images/whale.png" },
+            { word: "Beverages", sentence: "The menu lists hot and cold beverages like tea, coffee, and juice.", image: "images/beverages.png" },
+            { word: "Lead", sentence: "Lead is a heavy grey metal that can be dangerous to touch.", image: "images/lead.jpg" },
+            { word: "Lid", sentence: "Please put the lid back on the pot so the soup stays hot.", image: "images/lid.jpg" },
+            { word: "Traction", sentence: "Her new business idea is gaining traction — more people are interested every day.", image: "images/traction.png" },
+            { word: "Intake", sentence: "The doctor said I should reduce my sugar intake.", image: "images/intake.jpg" },
+            { word: "Yawn", sentence: "She began to yawn because the movie was so boring.", image: "images/yawn.jpg" },
+            { word: "Savoury", sentence: "I prefer savoury food like cheese and olives, not sweet cake.", image: "images/savoury.webp" },
+            { word: "Hash brown", sentence: "I had a crispy hash brown with eggs for breakfast.", image: "images/hash-brown.webp" },
+            { word: "Spooky", sentence: "The old empty house looks very spooky at night.", image: "images/spooky.webp" },
+            { word: "Intrigued", sentence: "She was intrigued by the mysterious letter and wanted to know more.", image: "images/intrigued.webp" },
+            { word: "Bump into", sentence: "I bumped into an old friend at the supermarket — what a surprise!", image: "images/bump-into.webp" },
+            { word: "Commute", sentence: "My commute to work takes thirty minutes by bus.", image: "images/commute.webp" },
+            { word: "Grumpy", sentence: "He is always grumpy before his morning coffee.", image: "images/grumpy.png" },
+            { word: "Flatmate", sentence: "My flatmate and I take turns cleaning the kitchen.", image: "images/flatmate.png" },
+            { word: "Landlord", sentence: "The landlord comes to collect the rent on the first of every month.", image: "images/landlord.png" },
+            { word: "Easygoing", sentence: "She is very easygoing — nothing seems to bother her.", image: "images/easygoing.png" },
+            { word: "Emphasized", sentence: "The doctor emphasized how important it is to drink enough water.", image: "images/emphasized.png" },
+            { word: "Deliberate", sentence: "Breaking the window was not an accident — it was deliberate.", image: "images/deliberate.png" },
+            { word: "Anxiety", sentence: "She feels anxiety before every exam, but she always does well.", image: "images/anxiety.png" },
+            { word: "Drought", sentence: "The long drought dried up the rivers and turned the fields brown.", image: "images/drought.png" },
+            { word: "Frustrating", sentence: "It is so frustrating when the internet is slow.", image: "images/frustrating.png" },
+            { word: "Accessing", sentence: "She had trouble accessing her email because she forgot the password.", image: "images/accessing.png" },
+            { word: "Put at ease", sentence: "The kind nurse put the patient at ease with a warm smile.", image: "images/put-at-ease.png" },
+            { word: "Cues", sentence: "The actor waited for his cues before stepping onto the stage.", image: "images/cues.png" },
+            { word: "Significant", sentence: "Exercise makes a significant difference to your health.", image: "images/significant.png" },
+            { word: "Transparency", sentence: "The company promised full transparency about how it spends money.", image: "images/transparency.png" },
+            { word: "Endure", sentence: "She had to endure a very cold winter without heating.", image: "images/endure.png" },
+            { word: "Maintain", sentence: "You need to maintain your car regularly so it keeps running well.", image: "images/maintain.png" },
+            { word: "Strain", sentence: "Carrying heavy bags all day put a strain on his back.", image: "images/strain.png" },
+            { word: "Prolong", sentence: "Eating well and staying active can prolong your life.", image: "images/prolong.png" },
+            { word: "Underlying", sentence: "The doctor looked for the underlying cause of her headaches.", image: "images/underlying.png" },
+            { word: "Cohesion", sentence: "A good team needs cohesion — everyone must work together.", image: "images/cohesion.png" },
+        ];
+
+        let current = 0;
+
+        function showCard() {
+            document.getElementById("word").textContent = words[current].word;
+            document.getElementById("sentence").textContent = words[current].sentence;
+            document.getElementById("cardImage").src = words[current].image;
+            document.getElementById("cardImage").alt = words[current].word;
+            document.getElementById("progress").textContent = (current + 1) + " / " + words.length;
+        }
+
+        document.getElementById("nextBtn").addEventListener("click", function () {
+            current = (current + 1) % words.length;
+            showCard();
+        });
+
+        showCard();
+    </script>
+</body>
+</html>
