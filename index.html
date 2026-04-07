@@ -77,10 +77,16 @@
             font-weight: 600;
         }
 
-        .next-btn {
+        .btn-row {
             margin-top: 28px;
             width: 100%;
             max-width: 400px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            flex: 1;
             padding: 18px 32px;
             font-size: 1.4rem;
             font-weight: 700;
@@ -94,7 +100,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .next-btn:active {
+        .nav-btn:active {
             transform: scale(0.97);
             box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
         }
@@ -113,7 +119,10 @@
 
     <div class="progress" id="progress"></div>
 
-    <button class="next-btn" id="nextBtn">Next →</button>
+    <div class="btn-row">
+        <button class="nav-btn" id="backBtn">← Back</button>
+        <button class="nav-btn" id="nextBtn">Next →</button>
+    </div>
 
     <script>
         const words = [
@@ -175,6 +184,11 @@
             document.getElementById("cardImage").alt = words[current].word;
             document.getElementById("progress").textContent = (current + 1) + " / " + words.length;
         }
+
+        document.getElementById("backBtn").addEventListener("click", function () {
+            current = (current - 1 + words.length) % words.length;
+            showCard();
+        });
 
         document.getElementById("nextBtn").addEventListener("click", function () {
             current = (current + 1) % words.length;
