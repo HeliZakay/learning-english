@@ -104,10 +104,200 @@
             transform: scale(0.97);
             box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
         }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            background: rgba(99, 102, 241, 0.15);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 24px;
+            gap: 4px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 11px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            background: transparent;
+            color: #6366F1;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mode-btn.active {
+            background: #FFFFFF;
+            color: #4338CA;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            width: 100%;
+            max-width: 400px;
+            display: none;
+        }
+
+        .quiz-card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+            padding: 32px 28px;
+            text-align: center;
+        }
+
+        .quiz-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            object-fit: cover;
+        }
+
+        .quiz-sentence {
+            font-size: 1.3rem;
+            color: #4B5563;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            padding: 0 4px;
+        }
+
+        .quiz-blank {
+            display: inline-block;
+            min-width: 80px;
+            border-bottom: 3px solid #6366F1;
+            color: #6366F1;
+            font-weight: 700;
+            padding: 0 4px;
+            margin: 0 2px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            padding: 14px 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4338CA;
+            background: #FFFFFF;
+            border: 2.5px solid #C7D2FE;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.12s, border-color 0.15s, background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            word-break: break-word;
+        }
+
+        .option-btn:active:not(.disabled) {
+            transform: scale(0.96);
+        }
+
+        .option-btn.correct {
+            background: #D1FAE5;
+            border-color: #34D399;
+            color: #065F46;
+        }
+
+        .option-btn.wrong {
+            background: #FEE2E2;
+            border-color: #F87171;
+            color: #991B1B;
+        }
+
+        .option-btn.disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .option-btn.disabled.correct {
+            opacity: 1;
+        }
+
+        .quiz-feedback {
+            font-size: 1.2rem;
+            font-weight: 700;
+            min-height: 1.5em;
+            margin-bottom: 16px;
+        }
+
+        .quiz-feedback.correct {
+            color: #059669;
+        }
+
+        .quiz-feedback.wrong {
+            color: #DC2626;
+        }
+
+        .quiz-next-btn {
+            display: none;
+            width: 100%;
+            padding: 16px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+            -webkit-tap-highlight-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .quiz-next-btn:active {
+            transform: scale(0.97);
+        }
+
+        .quiz-score {
+            font-size: 1rem;
+            color: #6366F1;
+            font-weight: 600;
+        }
+
+        /* End screen */
+        .quiz-end {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .quiz-end .end-emoji {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .quiz-end .end-score {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #4338CA;
+            margin-bottom: 8px;
+        }
+
+        .quiz-end .end-message {
+            font-size: 1.2rem;
+            color: #4B5563;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
     <h1>My English Words</h1>
+
+    <div class="mode-toggle">
+        <button class="mode-btn active" id="flashcardsTab">Flashcards</button>
+        <button class="mode-btn" id="quizTab">Quiz Game</button>
+    </div>
 
     <div class="card-container">
         <div class="card">
@@ -124,6 +314,26 @@
         <button class="nav-btn" id="nextBtn">Next →</button>
     </div>
 
+    <!-- Quiz Game -->
+    <div class="quiz-container" id="quizContainer">
+        <div class="quiz-card">
+            <div id="quizGame">
+                <img class="quiz-image" id="quizImage" src="" alt="">
+                <div class="quiz-sentence" id="quizSentence"></div>
+                <div class="options-grid" id="optionsGrid"></div>
+                <div class="quiz-feedback" id="quizFeedback"></div>
+                <button class="quiz-next-btn" id="quizNextBtn">Next Question →</button>
+                <div class="quiz-score" id="quizScore"></div>
+            </div>
+            <div class="quiz-end" id="quizEnd">
+                <div class="end-emoji" id="endEmoji"></div>
+                <div class="end-score" id="endScore"></div>
+                <div class="end-message" id="endMessage"></div>
+                <button class="quiz-next-btn" style="display:block" id="playAgainBtn">Play Again</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const words = [
             { word: "Drizzle", sentence: "Take an umbrella — there is a light drizzle outside.", image: "images/drizzle.png" },
@@ -131,40 +341,40 @@
             { word: "Likely", sentence: "She is likely to get the job — her interview went very well.", image: "images/likely.png" },
             { word: "Shortchange", sentence: "The cashier tried to shortchange me by giving back less money.", image: "images/shortchange.png" },
             { word: "Settle", sentence: "After years of traveling, she decided to settle in a quiet town.", image: "images/settle.png" },
-            { word: "Rose-tinted", sentence: "He sees the past through rose-tinted glasses, as if everything was perfect.", image: "images/rose-tinted.png" },
+            { word: "Rose-tinted", sentence: "He sees the past through rose-tinted glasses, as if everything was perfect.", image: "images/rose-tinted.png", blank: "rose-tinted" },
             { word: "Soluble", sentence: "Sugar is soluble — it disappears when you stir it into water.", image: "images/soluble.png" },
-            { word: "Like water off a duck's back", sentence: "I told him he was wrong, but it was like water off a duck's back — he didn't care at all.", image: "images/like-water-off-a-ducks-back.png" },
+            { word: "Like water off a duck's back", sentence: "I told him he was wrong, but it was like water off a duck's back — he didn't care at all.", image: "images/like-water-off-a-ducks-back.png", blank: "like water off a duck's back" },
             { word: "Hyperbole", sentence: "'I've told you a million times!' is a hyperbole — a big exaggeration.", image: "images/hyperbole.png" },
             { word: "Distribute", sentence: "The teacher will distribute the books to all the students.", image: "images/distribute.png" },
             { word: "Shortage", sentence: "There is a shortage of eggs in the shops this week.", image: "images/shortage.png" },
             { word: "Memorize", sentence: "I need to memorize ten new English words every week.", image: "images/memorize.png" },
-            { word: "Slither", sentence: "The snake slithered silently through the grass.", image: "images/slither.png" },
-            { word: "Soar", sentence: "The eagle soared high above the mountains.", image: "images/soar.png" },
+            { word: "Slither", sentence: "The snake slithered silently through the grass.", image: "images/slither.png", blank: "slithered" },
+            { word: "Soar", sentence: "The eagle soared high above the mountains.", image: "images/soar.png", blank: "soared" },
             { word: "Whale", sentence: "We saw a huge whale jumping out of the ocean.", image: "images/whale.png" },
-            { word: "Beverages", sentence: "The menu lists hot and cold beverages like tea, coffee, and juice.", image: "images/beverages.png" },
+            { word: "Beverages", sentence: "The menu lists hot and cold beverages like tea, coffee, and juice.", image: "images/beverages.png", blank: "beverages" },
             { word: "Lead", sentence: "Lead is a heavy grey metal that can be dangerous to touch.", image: "images/lead.jpg" },
             { word: "Lid", sentence: "Please put the lid back on the pot so the soup stays hot.", image: "images/lid.jpg" },
             { word: "Traction", sentence: "Her new business idea is gaining traction — more people are interested every day.", image: "images/traction.png" },
             { word: "Intake", sentence: "The doctor said I should reduce my sugar intake.", image: "images/intake.jpg" },
             { word: "Yawn", sentence: "She began to yawn because the movie was so boring.", image: "images/yawn.jpg" },
             { word: "Savoury", sentence: "I prefer savoury food like cheese and olives, not sweet cake.", image: "images/savoury.webp" },
-            { word: "Hash brown", sentence: "I had a crispy hash brown with eggs for breakfast.", image: "images/hash-brown.webp" },
+            { word: "Hash brown", sentence: "I had a crispy hash brown with eggs for breakfast.", image: "images/hash-brown.webp", blank: "hash brown" },
             { word: "Spooky", sentence: "The old empty house looks very spooky at night.", image: "images/spooky.webp" },
-            { word: "Intrigued", sentence: "She was intrigued by the mysterious letter and wanted to know more.", image: "images/intrigued.webp" },
-            { word: "Bump into", sentence: "I bumped into an old friend at the supermarket — what a surprise!", image: "images/bump-into.webp" },
+            { word: "Intrigued", sentence: "She was intrigued by the mysterious letter and wanted to know more.", image: "images/intrigued.webp", blank: "intrigued" },
+            { word: "Bump into", sentence: "I bumped into an old friend at the supermarket — what a surprise!", image: "images/bump-into.webp", blank: "bumped into" },
             { word: "Commute", sentence: "My commute to work takes thirty minutes by bus.", image: "images/commute.webp" },
             { word: "Grumpy", sentence: "He is always grumpy before his morning coffee.", image: "images/grumpy.png" },
             { word: "Flatmate", sentence: "My flatmate and I take turns cleaning the kitchen.", image: "images/flatmate.png" },
             { word: "Landlord", sentence: "The landlord comes to collect the rent on the first of every month.", image: "images/landlord.png" },
             { word: "Easygoing", sentence: "She is very easygoing — nothing seems to bother her.", image: "images/easygoing.png" },
-            { word: "Emphasized", sentence: "The doctor emphasized how important it is to drink enough water.", image: "images/emphasized.png" },
+            { word: "Emphasized", sentence: "The doctor emphasized how important it is to drink enough water.", image: "images/emphasized.png", blank: "emphasized" },
             { word: "Deliberate", sentence: "Breaking the window was not an accident — it was deliberate.", image: "images/deliberate.png" },
             { word: "Anxiety", sentence: "She feels anxiety before every exam, but she always does well.", image: "images/anxiety.png" },
             { word: "Drought", sentence: "The long drought dried up the rivers and turned the fields brown.", image: "images/drought.png" },
-            { word: "Frustrating", sentence: "It is so frustrating when the internet is slow.", image: "images/frustrating.png" },
-            { word: "Accessing", sentence: "She had trouble accessing her email because she forgot the password.", image: "images/accessing.png" },
-            { word: "Put at ease", sentence: "The kind nurse put the patient at ease with a warm smile.", image: "images/put-at-ease.png" },
-            { word: "Cues", sentence: "The actor waited for his cues before stepping onto the stage.", image: "images/cues.png" },
+            { word: "Frustrating", sentence: "It is so frustrating when the internet is slow.", image: "images/frustrating.png", blank: "frustrating" },
+            { word: "Accessing", sentence: "She had trouble accessing her email because she forgot the password.", image: "images/accessing.png", blank: "accessing" },
+            { word: "Put at ease", sentence: "The kind nurse put the patient at ease with a warm smile.", image: "images/put-at-ease.png", blank: "put the patient at ease" },
+            { word: "Cues", sentence: "The actor waited for his cues before stepping onto the stage.", image: "images/cues.png", blank: "cues" },
             { word: "Significant", sentence: "Exercise makes a significant difference to your health.", image: "images/significant.png" },
             { word: "Transparency", sentence: "The company promised full transparency about how it spends money.", image: "images/transparency.png" },
             { word: "Endure", sentence: "She had to endure a very cold winter without heating.", image: "images/endure.png" },
@@ -196,6 +406,172 @@
         });
 
         showCard();
+
+        // === Quiz Game Logic ===
+
+        let quizOrder = [];
+        let quizIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const correctMessages = ["Great job!", "You got it!", "Wonderful!", "Exactly right!", "Well done!", "Perfect!"];
+        const wrongMessages = ["Good try!", "Almost!", "Keep going!"];
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function startQuiz() {
+            quizOrder = shuffle([...Array(words.length).keys()]);
+            quizIndex = 0;
+            score = 0;
+            answered = false;
+            document.getElementById("quizEnd").style.display = "none";
+            document.getElementById("quizGame").style.display = "block";
+            showQuestion();
+        }
+
+        function showQuestion() {
+            answered = false;
+            const item = words[quizOrder[quizIndex]];
+            const blankText = item.blank || item.word;
+            const regex = new RegExp(escapeRegex(blankText), 'i');
+            const sentenceHTML = item.sentence.replace(regex, '<span class="quiz-blank">_______</span>');
+
+            document.getElementById("quizImage").src = item.image;
+            document.getElementById("quizImage").alt = "Hint image";
+            document.getElementById("quizSentence").innerHTML = sentenceHTML;
+            document.getElementById("quizFeedback").textContent = "";
+            document.getElementById("quizFeedback").className = "quiz-feedback";
+            document.getElementById("quizNextBtn").style.display = "none";
+            document.getElementById("quizScore").textContent =
+                score + " / " + (quizIndex) + " correct  ·  Question " + (quizIndex + 1) + " of " + words.length;
+
+            // Pick 3 wrong options
+            const wrongIndices = shuffle(
+                [...Array(words.length).keys()].filter(i => i !== quizOrder[quizIndex])
+            ).slice(0, 3);
+
+            const options = shuffle([
+                { text: item.word, correct: true },
+                ...wrongIndices.map(i => ({ text: words[i].word, correct: false }))
+            ]);
+
+            const grid = document.getElementById("optionsGrid");
+            grid.innerHTML = "";
+            options.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.textContent = opt.text;
+                btn.addEventListener("click", function () {
+                    if (answered) return;
+                    selectAnswer(btn, opt.correct, item.word, grid);
+                });
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selectedBtn, isCorrect, correctWord, grid) {
+            answered = true;
+            const allBtns = grid.querySelectorAll(".option-btn");
+
+            allBtns.forEach(btn => {
+                btn.classList.add("disabled");
+                if (btn.textContent === correctWord) {
+                    btn.classList.add("correct");
+                }
+            });
+
+            const feedback = document.getElementById("quizFeedback");
+            if (isCorrect) {
+                score++;
+                feedback.textContent = correctMessages[Math.floor(Math.random() * correctMessages.length)];
+                feedback.className = "quiz-feedback correct";
+            } else {
+                selectedBtn.classList.add("wrong");
+                feedback.textContent = wrongMessages[Math.floor(Math.random() * wrongMessages.length)] +
+                    " The answer is: " + correctWord;
+                feedback.className = "quiz-feedback wrong";
+            }
+
+            document.getElementById("quizScore").textContent =
+                score + " / " + (quizIndex + 1) + " correct  ·  Question " + (quizIndex + 1) + " of " + words.length;
+            document.getElementById("quizNextBtn").style.display = "block";
+        }
+
+        document.getElementById("quizNextBtn").addEventListener("click", function () {
+            quizIndex++;
+            if (quizIndex >= words.length) {
+                showEndScreen();
+            } else {
+                showQuestion();
+            }
+        });
+
+        function showEndScreen() {
+            document.getElementById("quizGame").style.display = "none";
+            const endDiv = document.getElementById("quizEnd");
+            endDiv.style.display = "block";
+
+            const pct = Math.round((score / words.length) * 100);
+            let emoji, message;
+            if (pct >= 90) {
+                emoji = "🌟";
+                message = "Amazing! You really know these words!";
+            } else if (pct >= 70) {
+                emoji = "😊";
+                message = "Great work! You are doing wonderfully!";
+            } else if (pct >= 50) {
+                emoji = "💪";
+                message = "Good effort! Practice makes perfect!";
+            } else {
+                emoji = "📚";
+                message = "Keep learning! You will get better every time!";
+            }
+
+            document.getElementById("endEmoji").textContent = emoji;
+            document.getElementById("endScore").textContent = score + " / " + words.length + " correct";
+            document.getElementById("endMessage").textContent = message;
+        }
+
+        document.getElementById("playAgainBtn").addEventListener("click", startQuiz);
+
+        // === Mode Switching ===
+
+        const flashcardsTab = document.getElementById("flashcardsTab");
+        const quizTab = document.getElementById("quizTab");
+        const cardContainer = document.querySelector(".card-container");
+        const progressEl = document.getElementById("progress");
+        const btnRow = document.querySelector(".btn-row");
+        const quizContainer = document.getElementById("quizContainer");
+
+        flashcardsTab.addEventListener("click", function () {
+            flashcardsTab.classList.add("active");
+            quizTab.classList.remove("active");
+            cardContainer.style.display = "";
+            progressEl.style.display = "";
+            btnRow.style.display = "";
+            quizContainer.style.display = "none";
+        });
+
+        quizTab.addEventListener("click", function () {
+            quizTab.classList.add("active");
+            flashcardsTab.classList.remove("active");
+            cardContainer.style.display = "none";
+            progressEl.style.display = "none";
+            btnRow.style.display = "none";
+            quizContainer.style.display = "block";
+            startQuiz();
+        });
     </script>
 </body>
 </html>
