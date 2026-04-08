@@ -117,8 +117,8 @@
 
         .mode-btn {
             flex: 1;
-            padding: 12px 20px;
-            font-size: 1.1rem;
+            padding: 12px 10px;
+            font-size: 1rem;
             font-weight: 600;
             border: none;
             border-radius: 11px;
@@ -289,6 +289,203 @@
             margin-bottom: 24px;
             line-height: 1.5;
         }
+
+        /* === Story Reader Styles === */
+
+        .story-container {
+            width: 100%;
+            max-width: 400px;
+            display: none;
+        }
+
+        .story-card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+            padding: 32px 24px;
+        }
+
+        .story-toc-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #4338CA;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .story-toc-title-he {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #6366F1;
+            text-align: center;
+            margin-bottom: 24px;
+            direction: rtl;
+        }
+
+        .story-toc-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .story-toc-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            padding: 18px 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4338CA;
+            background: #F0EDFF;
+            border: 2.5px solid #C7D2FE;
+            border-radius: 16px;
+            cursor: pointer;
+            text-align: left;
+            transition: transform 0.12s, background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .story-toc-item:active {
+            transform: scale(0.97);
+            background: #E0DDFF;
+        }
+
+        .story-toc-item-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            color: #FFFFFF;
+            font-size: 1.2rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .story-toc-item-title {
+            flex: 1;
+        }
+
+        /* Chapter Reader */
+        .story-header {
+            border-bottom: 2px solid #E0E7FF;
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+        }
+
+        .story-chapter-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #4338CA;
+            margin-bottom: 6px;
+        }
+
+        .story-page-indicator {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #6366F1;
+        }
+
+        .story-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #E0E7FF;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .story-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366F1, #4F46E5);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .story-page-content {
+            font-size: 1.5rem;
+            color: #1F2937;
+            line-height: 1.8;
+            min-height: 200px;
+            padding: 8px 0;
+        }
+
+        .story-page-content p {
+            margin-bottom: 16px;
+        }
+
+        .story-nav {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .story-main-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .story-main-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+
+        .story-back-page-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #6366F1;
+            background: #F0EDFF;
+            border: 2px solid #C7D2FE;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .story-back-page-btn:active {
+            transform: scale(0.97);
+        }
+
+        .story-back-page-btn.hidden {
+            display: none;
+        }
+
+        .story-toc-btn {
+            display: block;
+            width: 100%;
+            margin-top: 16px;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #4338CA;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2.5px solid #C7D2FE;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.12s;
+            -webkit-tap-highlight-color: transparent;
+            text-align: center;
+        }
+
+        .story-toc-btn:active {
+            transform: scale(0.97);
+        }
     </style>
 </head>
 <body>
@@ -297,6 +494,7 @@
     <div class="mode-toggle">
         <button class="mode-btn active" id="flashcardsTab">Flashcards</button>
         <button class="mode-btn" id="quizTab">Quiz Game</button>
+        <button class="mode-btn" id="storyTab">Story</button>
     </div>
 
     <div class="card-container">
@@ -331,6 +529,38 @@
                 <div class="end-message" id="endMessage"></div>
                 <button class="quiz-next-btn" style="display:block" id="playAgainBtn">Play Again</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Story Reader -->
+    <div class="story-container" id="storyContainer">
+
+        <!-- Table of Contents View -->
+        <div class="story-toc" id="storyToc">
+            <div class="story-card">
+                <div class="story-toc-title" id="storyTitle">The Letters We Never Sent</div>
+                <div class="story-toc-title-he">תוכן עניינים</div>
+                <div class="story-toc-list" id="storyTocList"></div>
+            </div>
+        </div>
+
+        <!-- Chapter Reading View -->
+        <div class="story-reader" id="storyReader" style="display:none">
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="story-chapter-title" id="storyChapterTitle"></div>
+                    <div class="story-page-indicator" id="storyPageIndicator"></div>
+                    <div class="story-progress-bar">
+                        <div class="story-progress-fill" id="storyProgressFill"></div>
+                    </div>
+                </div>
+                <div class="story-page-content" id="storyPageContent"></div>
+                <div class="story-nav">
+                    <button class="story-back-page-btn hidden" id="storyPrevPageBtn">← Previous Page</button>
+                    <button class="story-main-btn" id="storyNextPageBtn">Next Page →</button>
+                </div>
+            </div>
+            <button class="story-toc-btn" id="storyBackToTocBtn">☰ Table of Contents</button>
         </div>
     </div>
 
@@ -548,33 +778,210 @@
 
         document.getElementById("playAgainBtn").addEventListener("click", startQuiz);
 
+        // === Story Reader ===
+
+        const storyData = {
+            title: "The Letters We Never Sent",
+            chapters: [
+                {
+                    title: "Part 1: The Drizzle in Lisbon",
+                    pages: [
+                        "Clara Whitfield had never planned to settle in Lisbon. At sixty-six, she had imagined herself growing old in the same Suffolk cottage where she\u2019d raised her children and endured thirty-one years of a marriage that had quietly dissolved, like something soluble in water \u2014 slowly, invisibly, until one morning there was simply nothing left.",
+                        "Her daughter, Meg, had emphasized the importance of \u201Ca fresh start\u201D so many times that Clara had memorized the speech. *You deserve more, Mum. Dad shortchanged you for decades, and you just took it \u2014 like water off a duck\u2019s back \u2014 as if none of it mattered.*\n\nBut it had mattered. Every cold silence, every forgotten birthday, every evening spent alone while Richard worked late had left a strain she could feel deep in her bones, an underlying ache she\u2019d carried so long she\u2019d mistaken it for personality.",
+                        "The flat in Alfama came through a friend of a friend \u2014 a tiny place with blue tiles on the walls, a kitchen so small you could touch both counters with your arms outstretched, and a landlord named Senhor Oliveira who was round, cheerful, and insisted on bringing her coffee every Sunday.\n\nHer flatmate was a young Irish woman called Niamh, who was easygoing and loud and played guitar on the balcony at midnight, and who, against all logic, made Clara feel twenty years younger.",
+                        "It was a Tuesday in October \u2014 a cool morning with a light drizzle misting the cobblestones \u2014 when Clara first bumped into Marco Ferreira at the Feira da Ladra flea market.\n\nShe had been reaching for a small ceramic pot, white with hand-painted lemons, when another hand reached for it at the same time. She looked up. He looked down. He was tall, with silver hair and kind, dark eyes, and he smiled at her with the sort of warmth that put her at ease immediately.",
+                        "\u201CYou take it,\u201D he said in careful English, reading the cues of her foreignness \u2014 the raincoat, the uncertain posture, the guidebook jutting from her bag.\n\n\u201CNo, please. You were here first.\u201D\n\nHe laughed. \u201CThen we have a problem.\u201D\n\nThey solved the problem over coffee at a nearby caf\u00E9, where Marco ordered them both espressos and a plate of past\u00E9is de nata, and Clara learned that he was seventy, a retired architect, a widower of five years, and that he had a habit of buying things at the market he didn\u2019t need because he liked talking to the vendors.",
+                        "He was intrigued by her \u2014 an English woman, alone in Lisbon, starting over. She was intrigued by him \u2014 a Portuguese man who spoke about buildings the way other people spoke about lovers.\n\n\u201CEvery good building,\u201D he told her, tapping the table for emphasis, \u201Chas transparency. You must see the honesty in the structure. When someone hides the bones of a building behind decoration, they are lying to you.\u201D\n\nClara thought about this longer than she probably should have."
+                    ]
+                },
+                {
+                    title: "Part 2: The Warmth That Grew",
+                    pages: [
+                        "Over the weeks that followed, their meetings became increasingly regular. What started as a chance encounter gained traction \u2014 Tuesday coffee became Wednesday walks, became Friday dinners at small restaurants where Marco knew the owner and Clara tried savoury dishes she couldn\u2019t pronounce.\n\nHe showed her Lisbon the way only someone who loved a city could: the miradouros at sunset, the narrow alleys where fado music slithered out of open doorways, the wide mouth of the Tagus where, on clear days, you could watch birds soar against the light.",
+                        "Clara found herself changing. The anxiety that had been her constant companion \u2014 the tight feeling in her chest every morning, the dread of the empty hours \u2014 began, slowly, to lift.\n\nShe started sleeping better. She stopped watching the clock. She even began to maintain a small herb garden on the balcony, something she hadn\u2019t done since the children were young.",
+                        "\u201CYou look different,\u201D Niamh told her one evening, handing her a mug of tea. Beverages in their flat were always tea \u2014 Niamh didn\u2019t trust Portuguese coffee after six in the evening. \u201CYou look like someone who\u2019s actually enjoying her life.\u201D\n\n\u201CDon\u2019t use hyperbole on me, dear.\u201D\n\n\u201CIt\u2019s not hyperbole. Your face has changed. Something\u2019s softening.\u201D\n\nClara put the lid on the teapot and said nothing, but she felt it too.",
+                        "She told herself not to see things through rose-tinted glasses. She was sixty-six years old. She had been hurt before. She knew the cost of hoping too much.\n\nBut Marco made it frustrating to be cautious, because he was so deliberately, quietly wonderful. He remembered which pastries she liked. He walked on the side of the pavement closest to the road.\n\nWhen she told him, haltingly, about her marriage, about the loneliness, about the years she\u2019d spent feeling invisible, he didn\u2019t try to fix it or minimize it. He just listened, and then he said, \u201CYou were brave to leave.\u201D\n\nNo one had ever called her brave."
+                    ]
+                },
+                {
+                    title: "Part 3: The Drought and the Storm",
+                    pages: [
+                        "By December, the city was caught in an unusual drought. The fountains in the squares stuttered and went dry, and the sky stayed a stubborn, cloudless blue for weeks.\n\nThere was a shortage of patience too \u2014 the streets were dusty, the tourists were grumpy, and even Senhor Oliveira stopped bringing Sunday coffee, muttering about water bills.",
+                        "It was during this dry, restless stretch that Clara received a phone call from Richard. Her ex-husband.\n\nHe was calling, he said, because their son, James, had told him about \u201Cthis Portuguese fellow,\u201D and he wanted Clara to know that he thought she was making a fool of herself.\n\n\u201CAt your age,\u201D he said, his voice flat and heavy, like lead pressing down. \u201CRunning off to some foreign country, playing at being young again. It\u2019s embarrassing.\u201D",
+                        "Clara\u2019s hands trembled. She felt the old feelings return \u2014 the smallness, the doubt, the strain of trying to justify her existence to a man who had never thought she needed one.\n\nShe wanted to hang up but couldn\u2019t. Even now, even from a thousand miles away, his disapproval had a gravity she couldn\u2019t escape.",
+                        "She didn\u2019t see Marco for four days after that. She told him she had a cold. It was a deliberate lie, and she felt terrible about it, but the anxiety had come back, and she didn\u2019t know how to explain it.\n\nHow do you tell a man you\u2019re falling for that a single phone call from your ex-husband can undo months of healing? That the underlying damage is still there, beneath all the past\u00E9is de nata and the sunset walks?",
+                        "It was Niamh who found her crying in the kitchen at three in the morning, sitting on the cold tile floor with the lid of the biscuit tin in her lap, surrounded by crumbs.\n\n\u201CRight,\u201D said Niamh, sitting down beside her. \u201CRecap. You\u2019ve left a man who treated you like furniture. You\u2019ve moved to one of the most beautiful cities in the world. You\u2019ve met someone who actually sees you. And now you\u2019re on the floor at three a.m. because your ex rang and was nasty. Does that about cover it?\u201D",
+                        "Clara laughed through her tears. \u201CYou make it sound simple.\u201D\n\n\u201CIt is simple. It\u2019s just not easy. There\u2019s a difference.\u201D"
+                    ]
+                },
+                {
+                    title: "Part 4: Letters and Whales",
+                    pages: [
+                        "The next morning, still puffy-eyed and exhausted, Clara made herself a breakfast of eggs and hash browns \u2014 proper ones, the way her mother used to make them, grated and fried until golden \u2014 and sat on the balcony with a notebook.\n\nShe had decided to write Marco a letter. Not a text, not a phone call. A letter.",
+                        "She had always been better on paper. Words spoken aloud had a tendency to come out wrong, to get tangled in her own hesitation. But written down, they behaved. She could arrange them, adjust them, make them say exactly what she meant.\n\n*Dear Marco,* she began.",
+                        "*I owe you an apology, and also the truth. I haven\u2019t had a cold. I\u2019ve been hiding, because my ex-husband called and reminded me of all the things I\u2019m afraid of \u2014 that I\u2019m too old for this, that I\u2019m foolish, that happiness at my age is just a story I\u2019m telling myself.*\n\n*But here is what I know. When I am with you, I feel like a person again. Not a wife, not a mother, not a problem to be solved. Just Clara. And I don\u2019t want to prolong this silence, because every day I don\u2019t see you feels like a day I\u2019m choosing the wrong life.*",
+                        "She paused and looked out at the river. A boat was moving slowly across the water, and for a strange, fleeting moment, she thought about whales \u2014 about how they sing to each other across entire oceans, their voices carrying through miles of dark water.\n\nShe wondered if that was what love was, really. Not proximity, but reach. Not being next to someone, but being willing to send your voice into the dark and trust that it would be heard.",
+                        "She finished the letter, sealed it, and walked to Marco\u2019s apartment in Gra\u00E7a. She pushed it under his door and walked home, her heart hammering.\n\nHe called her forty minutes later.\n\n\u201CI\u2019m coming over,\u201D he said. \u201CAnd I\u2019m bringing cake.\u201D"
+                    ]
+                },
+                {
+                    title: "Part 5: A Place to Distribute Your Heart",
+                    pages: [
+                        "Marco arrived with a lemon cake from the bakery on Rua da Gra\u00E7a and a look on his face that Clara would remember for the rest of her life \u2014 tender and serious and full of something she hadn\u2019t dared name.\n\nThey sat on the balcony, and he told her things he had never told anyone.",
+                        "About his wife, Beatriz, who had died of cancer five years ago. About the year after, when he stopped eating properly and his intake of wine grew alarming and his sister had to come and stay.\n\nAbout the day he decided to live again, not because the grief was over, but because he understood that grief and joy could coexist \u2014 that you didn\u2019t have to choose.",
+                        "\u201CYou don\u2019t have to distribute your heart in equal parts,\u201D he said, breaking off a piece of cake. \u201CSome people get more. Some seasons get more. That is not betrayal. That is being alive.\u201D\n\nClara reached across the table and took his hand. It was the first time she had touched him deliberately, not by accident \u2014 not bumping elbows at a market stall, not brushing fingers over a shared menu. This was a choice.",
+                        "\u201CI\u2019m scared,\u201D she said.\n\n\u201CI know. I am also scared.\u201D\n\n\u201CGood. Then we\u2019re doing it right.\u201D\n\nBelow them, the city hummed. A tram clattered up the hill. Niamh\u2019s guitar started up somewhere inside the flat \u2014 something slow and Irish and a little bit spooky in the way that the best folk songs are, carrying ghosts of older stories. The drizzle had returned, fine and silver, and the cobblestones shone.",
+                        "Marco didn\u2019t yawn. He didn\u2019t look away. He looked at Clara as though she were a building he wanted to understand \u2014 every wall, every window, every room she\u2019d closed off and every one she\u2019d opened.\n\n\u201CI want to know all of you,\u201D he said. \u201CEven the parts you think are too broken to show.\u201D",
+                        "She thought of the intermittent years \u2014 the long decades of stopping and starting, of trying and retreating, of almost-happiness cut short. She thought of the cozy Suffolk kitchen she\u2019d left behind, and the life she\u2019d once thought was likely to be all she\u2019d ever know.\n\nShe thought of Richard\u2019s voice on the phone, cold and dismissive, and she thought of Marco\u2019s voice now, warm as bread.",
+                        "She thought: *I will not be shortchanged again.*\n\n\u201CStay for dinner,\u201D she said.\n\nHe smiled. \u201CI was hoping you\u2019d ask.\u201D"
+                    ]
+                },
+                {
+                    title: "Part 6: A Year Later",
+                    pages: [
+                        "The wedding was small. Twelve people on a terrace overlooking the Tagus, with lanterns strung between the lemon trees and Senhor Oliveira weeping openly into his handkerchief.\n\nNiamh played guitar. Meg flew in from London, bringing Clara\u2019s granddaughter, Lily, who was four and who spent the entire ceremony trying to access the cake table.",
+                        "James came too, quieter than his sister, but he shook Marco\u2019s hand and said, \u201CThank you for making her happy,\u201D and Clara had to look away so no one would see her cry.\n\nShe had learned, this past year, that it was possible to endure the hard things \u2014 the phone calls from Richard, the moments of doubt, the days when she felt like a fraud \u2014 and still choose joy.",
+                        "That cohesion between people wasn\u2019t about perfection; it was about showing up, again and again, with honesty and patience.\n\nThat a commute didn\u2019t have to be between home and work \u2014 it could be between the person you were and the person you were becoming.",
+                        "At the reception, Marco stood and raised his glass.\n\n\u201CI will keep this short,\u201D he said. \u201CBecause my English is imperfect and because the most significant things in life need very few words.\u201D\n\nHe looked at Clara.\n\n\u201CYou are the letter I found under my door. You are the reason I buy lemons at the market. You are the answer to a question I was too afraid to ask.\u201D",
+                        "He sat down. Everyone clapped. Lily distributed petals from a basket, most of them landing on the dog. The sky turned pink, then gold, then a deep, honest blue.\n\nClara looked at her husband \u2014 her *husband* \u2014 and felt something she hadn\u2019t felt in decades: the simple, overwhelming certainty that she was exactly where she was supposed to be.",
+                        "Not because life was perfect. Not because there wouldn\u2019t be hard days ahead. But because she had finally stopped waiting for permission to be happy, and had given it to herself.\n\nThe drizzle came again that evening, soft and warm, and they danced on the terrace in the rain, two people who had found each other late and loved each other well, and the city glittered below them like a promise kept."
+                    ]
+                }
+            ]
+        };
+
+        let storyChapter = 0;
+        let storyPage = 0;
+
+        function showStoryToc() {
+            document.getElementById("storyToc").style.display = "block";
+            document.getElementById("storyReader").style.display = "none";
+            document.getElementById("storyTitle").textContent = storyData.title;
+
+            const list = document.getElementById("storyTocList");
+            list.innerHTML = "";
+            storyData.chapters.forEach(function (chapter, index) {
+                const btn = document.createElement("button");
+                btn.className = "story-toc-item";
+                btn.innerHTML =
+                    '<span class="story-toc-item-number">' + (index + 1) + '</span>' +
+                    '<span class="story-toc-item-title">' + chapter.title + '</span>';
+                btn.addEventListener("click", function () {
+                    storyChapter = index;
+                    storyPage = 0;
+                    showStoryPage();
+                });
+                list.appendChild(btn);
+            });
+        }
+
+        function showStoryPage() {
+            document.getElementById("storyToc").style.display = "none";
+            document.getElementById("storyReader").style.display = "block";
+
+            const chapter = storyData.chapters[storyChapter];
+            const totalPages = chapter.pages.length;
+
+            document.getElementById("storyChapterTitle").textContent = chapter.title;
+            document.getElementById("storyPageIndicator").textContent =
+                "Page " + (storyPage + 1) + " of " + totalPages;
+
+            var progressFill = document.getElementById("storyProgressFill");
+            progressFill.style.width = (((storyPage + 1) / totalPages) * 100) + "%";
+
+            var content = chapter.pages[storyPage];
+            var paragraphs = content.split("\n\n");
+            var html = paragraphs.map(function (p) {
+                p = p.replace(/\*(.*?)\*/g, "<em>$1</em>");
+                return "<p>" + p + "</p>";
+            }).join("");
+            document.getElementById("storyPageContent").innerHTML = html;
+
+            var prevBtn = document.getElementById("storyPrevPageBtn");
+            if (storyPage === 0) {
+                prevBtn.classList.add("hidden");
+            } else {
+                prevBtn.classList.remove("hidden");
+            }
+
+            var nextBtn = document.getElementById("storyNextPageBtn");
+            if (storyPage < totalPages - 1) {
+                nextBtn.textContent = "Next Page →";
+            } else if (storyChapter < storyData.chapters.length - 1) {
+                nextBtn.textContent = "Next Chapter →";
+            } else {
+                nextBtn.textContent = "✓ Finished!";
+            }
+
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        document.getElementById("storyNextPageBtn").addEventListener("click", function () {
+            var chapter = storyData.chapters[storyChapter];
+            if (storyPage < chapter.pages.length - 1) {
+                storyPage++;
+                showStoryPage();
+            } else if (storyChapter < storyData.chapters.length - 1) {
+                storyChapter++;
+                storyPage = 0;
+                showStoryPage();
+            } else {
+                showStoryToc();
+            }
+        });
+
+        document.getElementById("storyPrevPageBtn").addEventListener("click", function () {
+            if (storyPage > 0) {
+                storyPage--;
+                showStoryPage();
+            }
+        });
+
+        document.getElementById("storyBackToTocBtn").addEventListener("click", function () {
+            showStoryToc();
+        });
+
         // === Mode Switching ===
 
         const flashcardsTab = document.getElementById("flashcardsTab");
         const quizTab = document.getElementById("quizTab");
+        const storyTab = document.getElementById("storyTab");
         const cardContainer = document.querySelector(".card-container");
         const progressEl = document.getElementById("progress");
         const btnRow = document.querySelector(".btn-row");
         const quizContainer = document.getElementById("quizContainer");
+        const storyContainer = document.getElementById("storyContainer");
 
-        flashcardsTab.addEventListener("click", function () {
-            flashcardsTab.classList.add("active");
-            quizTab.classList.remove("active");
-            cardContainer.style.display = "";
-            progressEl.style.display = "";
-            btnRow.style.display = "";
-            quizContainer.style.display = "none";
-        });
-
-        quizTab.addEventListener("click", function () {
-            quizTab.classList.add("active");
+        function switchMode(mode) {
             flashcardsTab.classList.remove("active");
+            quizTab.classList.remove("active");
+            storyTab.classList.remove("active");
+
             cardContainer.style.display = "none";
             progressEl.style.display = "none";
             btnRow.style.display = "none";
-            quizContainer.style.display = "block";
-            startQuiz();
-        });
+            quizContainer.style.display = "none";
+            storyContainer.style.display = "none";
+
+            if (mode === "flashcards") {
+                flashcardsTab.classList.add("active");
+                cardContainer.style.display = "";
+                progressEl.style.display = "";
+                btnRow.style.display = "";
+            } else if (mode === "quiz") {
+                quizTab.classList.add("active");
+                quizContainer.style.display = "block";
+                startQuiz();
+            } else if (mode === "story") {
+                storyTab.classList.add("active");
+                storyContainer.style.display = "block";
+                showStoryToc();
+            }
+        }
+
+        flashcardsTab.addEventListener("click", function () { switchMode("flashcards"); });
+        quizTab.addEventListener("click", function () { switchMode("quiz"); });
+        storyTab.addEventListener("click", function () { switchMode("story"); });
     </script>
 </body>
 </html>
