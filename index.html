@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My English Words</title>
+    <!-- Puter.js (Story text-to-speech) — disabled because it errors when opening the file directly (file://). Re-enable by uncommenting and serving via a local web server. -->
+    <!-- <script src="https://js.puter.com/v2/"></script> -->
     <style>
         * {
             margin: 0;
@@ -478,14 +480,206 @@
         .story-toc-btn:active {
             transform: scale(0.97);
         }
+
+        /* TTS Controls */
+        .tts-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tts-play-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4338CA;
+            background: #F0EDFF;
+            border: 2px solid #C7D2FE;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.12s, background 0.15s, color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tts-play-btn:active {
+            transform: scale(0.97);
+        }
+
+        .tts-play-btn.loading {
+            color: #6366F1;
+            cursor: wait;
+        }
+
+        .tts-play-btn.playing {
+            color: #FFFFFF;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            border-color: #4F46E5;
+        }
+
+        .tts-play-btn.error {
+            color: #991B1B;
+            background: #FEE2E2;
+            border-color: #F87171;
+        }
+
+        .tts-play-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tts-icon.spinning {
+            display: inline-block;
+            animation: tts-spin 1s linear infinite;
+        }
+
+        @keyframes tts-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .tts-settings-btn {
+            width: 48px;
+            font-size: 1.3rem;
+            color: #6366F1;
+            background: #F0EDFF;
+            border: 2px solid #C7D2FE;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.12s;
+            -webkit-tap-highlight-color: transparent;
+            flex-shrink: 0;
+        }
+
+        .tts-settings-btn:active {
+            transform: scale(0.97);
+        }
+
+        .tts-settings-btn.active {
+            background: #6366F1;
+            color: #FFFFFF;
+            border-color: #4F46E5;
+        }
+
+        .tts-settings-panel {
+            background: #F8F7FF;
+            border: 2px solid #C7D2FE;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .tts-settings-header {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4338CA;
+            margin-bottom: 12px;
+        }
+
+        .tts-field {
+            margin-bottom: 12px;
+        }
+
+        .tts-field label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4338CA;
+            margin-bottom: 4px;
+        }
+
+        .tts-field select,
+        .tts-field input {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 0.95rem;
+            border: 2px solid #C7D2FE;
+            border-radius: 10px;
+            background: #FFFFFF;
+            color: #1E1B4B;
+            box-sizing: border-box;
+        }
+
+        .tts-voice-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .tts-voice-chip {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4338CA;
+            background: #FFFFFF;
+            border: 2px solid #C7D2FE;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .tts-voice-chip.active {
+            background: #6366F1;
+            color: #FFFFFF;
+            border-color: #4F46E5;
+        }
+
+        .tts-preview-btn {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #4338CA;
+            background: #E0E7FF;
+            border: 2px solid #C7D2FE;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.12s;
+        }
+
+        .tts-preview-btn:active {
+            transform: scale(0.97);
+        }
+
+        .tts-notification {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            animation: tts-slide-in 0.3s ease;
+        }
+
+        .tts-notification.warning {
+            background: #FEF3C7;
+            border: 2px solid #F59E0B;
+            color: #92400E;
+        }
+
+        .tts-notification.error {
+            background: #FEE2E2;
+            border: 2px solid #F87171;
+            color: #991B1B;
+        }
+
+        @keyframes tts-slide-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <h1>My English Words</h1>
 
     <div class="mode-toggle">
-        <button class="mode-btn active" id="flashcardsTab">Flashcards</button>
-        <button class="mode-btn" id="quizTab">Quiz Game</button>
+        <button class="mode-btn active" id="flashcardsTab">Flashcards 1</button>
+        <button class="mode-btn" id="quizTab">Quiz 1</button>
+        <button class="mode-btn" id="flashcards2Tab">Flashcards 2</button>
+        <button class="mode-btn" id="quiz2Tab">Quiz 2</button>
         <button class="mode-btn" id="storyTab">Story</button>
     </div>
 
@@ -545,6 +739,35 @@
                         <div class="story-progress-fill" id="storyProgressFill"></div>
                     </div>
                 </div>
+                <div class="tts-controls" id="ttsControls">
+                    <button class="tts-play-btn" id="ttsPlayBtn">
+                        <span class="tts-icon" id="ttsIcon">&#9654;</span>
+                        <span class="tts-label" id="ttsLabel">Listen to this page</span>
+                    </button>
+                    <button class="tts-settings-btn" id="ttsSettingsBtn" title="Voice Settings">&#9881;</button>
+                </div>
+                <div class="tts-settings-panel" id="ttsSettingsPanel" style="display:none">
+                    <div class="tts-settings-header">Voice Settings</div>
+                    <div class="tts-field">
+                        <label for="ttsModel">Model</label>
+                        <select id="ttsModel">
+                            <option value="eleven_multilingual_v2">Multilingual v2</option>
+                            <option value="eleven_flash_v2_5">Flash v2.5 (faster)</option>
+                            <option value="eleven_turbo_v2_5">Turbo v2.5 (fastest)</option>
+                            <option value="eleven_v3">v3 (latest)</option>
+                        </select>
+                    </div>
+                    <div class="tts-field">
+                        <label>Voice Presets</label>
+                        <div class="tts-voice-presets" id="ttsVoicePresets"></div>
+                    </div>
+                    <div class="tts-field">
+                        <label for="ttsVoiceId">Custom Voice ID</label>
+                        <input type="text" id="ttsVoiceId" placeholder="Paste an ElevenLabs voice ID">
+                    </div>
+                    <button class="tts-preview-btn" id="ttsPreviewBtn">Preview Voice</button>
+                </div>
+                <div id="ttsNotificationArea"></div>
                 <div class="story-page-content" id="storyPageContent"></div>
                 <div class="story-nav">
                     <button class="story-back-page-btn hidden" id="storyPrevPageBtn">← Previous Page</button>
@@ -556,7 +779,7 @@
     </div>
 
     <script>
-        const words = [
+        const words1 = [
             { word: "Drizzle", sentence: "Take an umbrella — there is a light drizzle outside.", quizSentence: "We went for a walk in the drizzle and got a little wet.", image: "images/drizzle.png", quizImage: "https://images.unsplash.com/photo-1523889739556-7d3a75db3e35?w=400&fit=crop" },
             { word: "Intermittent", sentence: "The Wi-Fi signal was intermittent — it kept cutting out and coming back.", quizSentence: "The rain was intermittent — it stopped and started all afternoon.", image: "images/intermittent.png", quizImage: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&fit=crop" },
             { word: "Likely", sentence: "She is likely to get the job — her interview went very well.", quizSentence: "It is likely to rain tomorrow, so bring a jacket.", image: "images/likely.png", quizImage: "https://images.unsplash.com/photo-1762328493889-516b52b3aa7d?w=400&fit=crop" },
@@ -608,6 +831,63 @@
             { word: "Increasingly", sentence: "It is becoming increasingly difficult to find affordable housing.", quizSentence: "The weather is getting increasingly cold as winter approaches.", image: "images/increasingly.png", quizImage: "https://images.unsplash.com/photo-1519944159858-806d435dc86b?w=400&fit=crop" },
             { word: "Recap", sentence: "Let me give you a quick recap of what we discussed in the meeting.", quizSentence: "At the end of the lesson, the teacher gave a short recap of the main points.", image: "images/recap.png", quizImage: "https://plus.unsplash.com/premium_photo-1682888442766-f54919230728?w=400&fit=crop" },
         ];
+
+        // Batch 2 — new 50 words. Same shape as words1: { word, sentence, quizSentence, image, quizImage, blank? }
+        const words2 = [
+            { word: "Stir", sentence: "Please stir the soup so it does not stick to the pot.", quizSentence: "She likes to stir a little sugar into her tea.", image: "images/stir.png", quizImage: "images/stir.png", blank: "stir" },
+            { word: "Keep track", sentence: "I use a notebook to keep track of my homework.", quizSentence: "It is hard to keep track of time when you are having fun.", image: "images/keep-track.png", quizImage: "images/keep-track.png", blank: "keep track" },
+            { word: "Approximately", sentence: "The trip takes approximately two hours by car.", quizSentence: "There were approximately fifty people at the party.", image: "images/approximately.png", quizImage: "images/approximately.png", blank: "approximately" },
+            { word: "Queue", sentence: "We had to wait in a long queue at the bank.", quizSentence: "There was a big queue outside the cinema.", image: "images/queue.png", quizImage: "images/queue.png", blank: "queue" },
+            { word: "Crop", sentence: "The farmer planted a new crop of corn this spring.", quizSentence: "Heavy rain can damage the crop before the harvest.", image: "images/crop.png", quizImage: "images/crop.png", blank: "crop" },
+            { word: "Call center", sentence: "She works at a call center and answers the phone all day.", quizSentence: "I phoned the call center to ask about my bill.", image: "images/call-center.png", quizImage: "images/call-center.png", blank: "call center" },
+            { word: "Pacify", sentence: "The mother tried to pacify her crying baby with a soft toy.", quizSentence: "He spoke gently to pacify the angry customer.", image: "images/pacify.png", quizImage: "images/pacify.png", blank: "pacify" },
+            { word: "Aggravated", sentence: "The loud noise aggravated his headache.", quizSentence: "Scratching the bite only aggravated the itch.", image: "images/aggravated.png", quizImage: "images/aggravated.png", blank: "aggravated" },
+            { word: "Apparently", sentence: "Apparently, the shop is closed today — I saw a sign on the door.", quizSentence: "Apparently, it is going to snow tonight, so dress warmly.", image: "images/apparently.png", quizImage: "images/apparently.png", blank: "apparently" },
+            { word: "Hangout", sentence: "The café near my house is our favorite hangout after school.", quizSentence: "They met at their usual hangout, a small park by the river.", image: "images/hangout.png", quizImage: "images/hangout.png", blank: "hangout" },
+            { word: "Thrive", sentence: "Plants thrive when they get enough sunlight and water.", quizSentence: "Children thrive when they feel safe and loved.", image: "images/thrive.png", quizImage: "images/thrive.png", blank: "thrive" },
+            { word: "Drop off", sentence: "I drop off my daughter at school every morning.", quizSentence: "Can you drop off this package at the post office?", image: "images/drop-off.png", quizImage: "images/drop-off.png", blank: "drop off" },
+            { word: "Sign up", sentence: "I want to sign up for an English class this summer.", quizSentence: "You can sign up for the gym online in just a few minutes.", image: "images/sign-up.png", quizImage: "images/sign-up.png", blank: "sign up" },
+            { word: "Ancestry", sentence: "She studied her ancestry and found relatives in three countries.", quizSentence: "He is proud of his ancestry and loves learning about his family's past.", image: "images/ancestry.png", quizImage: "images/ancestry.png", blank: "ancestry" },
+            { word: "Reliable", sentence: "My car is very reliable — it never breaks down.", quizSentence: "She is a reliable friend who always keeps her promises.", image: "images/reliable.png", quizImage: "images/reliable.png", blank: "reliable" },
+            { word: "Trace", sentence: "The police found no trace of the missing keys.", quizSentence: "There was not a single trace of snow left by the afternoon.", image: "images/trace.png", quizImage: "images/trace.png", blank: "trace" },
+            { word: "Ancestors", sentence: "My ancestors came from a small village in the mountains.", quizSentence: "Long ago, our ancestors hunted animals and lived in caves.", image: "images/ancestors.png", quizImage: "images/ancestors.png", blank: "ancestors" },
+            { word: "Origins", sentence: "The origins of this old song are a mystery.", quizSentence: "Scientists study the origins of the universe.", image: "images/origins.png", quizImage: "images/origins.png", blank: "origins" },
+            { word: "Bickering", sentence: "The two children were bickering over the last cookie.", quizSentence: "Stop bickering, you two — there is enough for everyone.", image: "images/bickering.png", quizImage: "images/bickering.png", blank: "bickering" },
+            { word: "Strait", sentence: "The narrow strait connects two large seas.", quizSentence: "Ships sail carefully through the strait between the two islands.", image: "images/strait.png", quizImage: "images/strait.png", blank: "strait" },
+            { word: "Lost track", sentence: "I was so busy that I lost track of time.", quizSentence: "She lost track of how many cups of tea she had drunk.", image: "images/lost-track.png", quizImage: "images/lost-track.png", blank: "lost track" },
+            { word: "Hazard", sentence: "Wet floors are a hazard — you could slip and fall.", quizSentence: "Smoking is a serious hazard to your health.", image: "images/hazard.png", quizImage: "images/hazard.png", blank: "hazard" },
+            { word: "Ripe", sentence: "The bananas are yellow and ripe, ready to eat.", quizSentence: "Pick the tomatoes when they are red and ripe.", image: "images/ripe.png", quizImage: "images/ripe.png", blank: "ripe" },
+            { word: "Decay", sentence: "Too much sugar can cause your teeth to decay.", quizSentence: "The old fallen leaves slowly decay on the ground.", image: "images/decay.png", quizImage: "images/decay.png", blank: "decay" },
+            { word: "Wrinkles", sentence: "My grandmother has soft wrinkles around her kind eyes.", quizSentence: "I need to iron this shirt to remove the wrinkles.", image: "images/wrinkles.png", quizImage: "images/wrinkles.png", blank: "wrinkles" },
+            { word: "Venue", sentence: "The hotel is a beautiful venue for a wedding.", quizSentence: "They booked a large venue for the concert.", image: "images/venue.png", quizImage: "images/venue.png", blank: "venue" },
+            { word: "Clay", sentence: "The children made small bowls out of soft clay.", quizSentence: "The artist shaped the wet clay into a vase.", image: "images/clay.png", quizImage: "images/clay.png", blank: "clay" },
+            { word: "Cling", sentence: "The baby monkey will cling to its mother all day.", quizSentence: "Wet leaves cling to the bottom of your shoes.", image: "images/cling.png", quizImage: "images/cling.png", blank: "cling" },
+            { word: "Kickstart", sentence: "A cup of coffee helps me kickstart my morning.", quizSentence: "They gave him some money to kickstart his new business.", image: "images/kickstart.png", quizImage: "images/kickstart.png", blank: "kickstart" },
+            { word: "Down the line", sentence: "We can buy a bigger house down the line, when we save more.", quizSentence: "Don't worry about that now — we will deal with it down the line.", image: "images/down-the-line.png", quizImage: "images/down-the-line.png", blank: "down the line" },
+            { word: "Dense", sentence: "The forest was so dense we could not see the sky.", quizSentence: "The fog was very dense, so the cars drove slowly.", image: "images/dense.png", quizImage: "images/dense.png", blank: "dense" },
+            { word: "Fertile", sentence: "The fertile soil is perfect for growing vegetables.", quizSentence: "Farmers love this fertile land because crops grow well here.", image: "images/fertile.png", quizImage: "images/fertile.png", blank: "fertile" },
+            { word: "Protrusion", sentence: "There was a small protrusion on the wall where a nail stuck out.", quizSentence: "He felt a hard protrusion under the carpet.", image: "images/protrusion.png", quizImage: "images/protrusion.png", blank: "protrusion" },
+            { word: "Drain", sentence: "The dirty water ran down the drain in the sink.", quizSentence: "Pull the plug so the water can drain away.", image: "images/drain.png", quizImage: "images/drain.png", blank: "drain" },
+            { word: "Reminisce", sentence: "We like to reminisce about our school days.", quizSentence: "The old friends met to reminisce about the past.", image: "images/reminisce.png", quizImage: "images/reminisce.png", blank: "reminisce" },
+            { word: "Questionnaire", sentence: "Please fill in this short questionnaire about your visit.", quizSentence: "The doctor asked me to complete a health questionnaire.", image: "images/questionnaire.png", quizImage: "images/questionnaire.png", blank: "questionnaire" },
+            { word: "Distraction", sentence: "The loud music was a distraction while I tried to study.", quizSentence: "Turn off your phone to avoid any distraction during the exam.", image: "images/distraction.png", quizImage: "images/distraction.png", blank: "distraction" },
+            { word: "Destruction", sentence: "The storm caused terrible destruction in the town.", quizSentence: "The fire left a path of destruction behind it.", image: "images/destruction.png", quizImage: "images/destruction.png", blank: "destruction" },
+            { word: "Tweak", sentence: "I just need to tweak the recipe a little to make it better.", quizSentence: "She made a small tweak to the plan and it worked perfectly.", image: "images/tweak.png", quizImage: "images/tweak.png", blank: "tweak" },
+            { word: "Staple", sentence: "Rice is a staple food in many countries.", quizSentence: "Bread is a staple in our home — we eat it every day.", image: "images/staple.png", quizImage: "images/staple.png", blank: "staple" },
+            { word: "Portion", sentence: "She gave me a large portion of cake.", quizSentence: "Try to eat a smaller portion of rice at dinner.", image: "images/portion.png", quizImage: "images/portion.png", blank: "portion" },
+            { word: "Trial and error", sentence: "I learned to cook by trial and error.", quizSentence: "He fixed the bike through trial and error, trying again and again.", image: "images/trial-and-error.png", quizImage: "images/trial-and-error.png", blank: "trial and error" },
+            { word: "Toad", sentence: "A brown toad sat quietly by the pond.", quizSentence: "The toad jumped into the water with a splash.", image: "images/toad.png", quizImage: "images/toad.png", blank: "toad" },
+            { word: "Seasoning", sentence: "Add a little seasoning to make the soup tastier.", quizSentence: "This chicken needs more seasoning — it tastes plain.", image: "images/seasoning.png", quizImage: "images/seasoning.png", blank: "seasoning" },
+            { word: "Enhance", sentence: "A little salt can enhance the flavor of the food.", quizSentence: "New glasses will enhance her ability to see clearly.", image: "images/enhance.png", quizImage: "images/enhance.png", blank: "enhance" },
+            { word: "Sleeves", sentence: "It is hot, so I rolled up my sleeves.", quizSentence: "This shirt has long sleeves to keep you warm.", image: "images/sleeves.png", quizImage: "images/sleeves.png", blank: "sleeves" },
+            { word: "Citadel", sentence: "The old citadel stands on a hill above the city.", quizSentence: "Soldiers protected the city from inside the strong citadel.", image: "images/citadel.png", quizImage: "images/citadel.png", blank: "citadel" },
+            { word: "Tangible", sentence: "A handshake is a tangible sign of a deal.", quizSentence: "We need tangible proof, something we can actually see and touch.", image: "images/tangible.png", quizImage: "images/tangible.png", blank: "tangible" },
+            { word: "Rate", sentence: "Please rate the movie from one to five stars.", quizSentence: "Customers can rate the restaurant after their meal.", image: "images/rate.png", quizImage: "images/rate.png", blank: "rate" },
+            { word: "Ranks", sentence: "The website ranks the hotels from best to worst.", quizSentence: "This list ranks the players by their scores.", image: "images/ranks.png", quizImage: "images/ranks.png", blank: "ranks" },
+        ];
+
+        // Active batch — flashcard and quiz functions all read this reference.
+        let words = words1;
 
         let current = 0;
 
@@ -845,6 +1125,7 @@
         let storyPage = 0;
 
         function showStoryToc() {
+            ttsStop();
             document.getElementById("storyToc").style.display = "block";
             document.getElementById("storyReader").style.display = "none";
             document.getElementById("storyTitle").textContent = storyData.title;
@@ -867,6 +1148,7 @@
         }
 
         function showStoryPage() {
+            ttsStop();
             document.getElementById("storyToc").style.display = "none";
             document.getElementById("storyReader").style.display = "block";
 
@@ -936,6 +1218,8 @@
 
         const flashcardsTab = document.getElementById("flashcardsTab");
         const quizTab = document.getElementById("quizTab");
+        const flashcards2Tab = document.getElementById("flashcards2Tab");
+        const quiz2Tab = document.getElementById("quiz2Tab");
         const storyTab = document.getElementById("storyTab");
         const cardContainer = document.querySelector(".card-container");
         const progressEl = document.getElementById("progress");
@@ -944,8 +1228,11 @@
         const storyContainer = document.getElementById("storyContainer");
 
         function switchMode(mode) {
+            ttsStop();
             flashcardsTab.classList.remove("active");
             quizTab.classList.remove("active");
+            flashcards2Tab.classList.remove("active");
+            quiz2Tab.classList.remove("active");
             storyTab.classList.remove("active");
 
             cardContainer.style.display = "none";
@@ -954,13 +1241,17 @@
             quizContainer.style.display = "none";
             storyContainer.style.display = "none";
 
-            if (mode === "flashcards") {
-                flashcardsTab.classList.add("active");
+            if (mode === "flashcards" || mode === "flashcards2") {
+                words = mode === "flashcards2" ? words2 : words1;
+                (mode === "flashcards2" ? flashcards2Tab : flashcardsTab).classList.add("active");
+                current = 0;
                 cardContainer.style.display = "";
                 progressEl.style.display = "";
                 btnRow.style.display = "";
-            } else if (mode === "quiz") {
-                quizTab.classList.add("active");
+                showCard();
+            } else if (mode === "quiz" || mode === "quiz2") {
+                words = mode === "quiz2" ? words2 : words1;
+                (mode === "quiz2" ? quiz2Tab : quizTab).classList.add("active");
                 quizContainer.style.display = "block";
                 startQuiz();
             } else if (mode === "story") {
@@ -972,7 +1263,286 @@
 
         flashcardsTab.addEventListener("click", function () { switchMode("flashcards"); });
         quizTab.addEventListener("click", function () { switchMode("quiz"); });
+        flashcards2Tab.addEventListener("click", function () { switchMode("flashcards2"); });
+        quiz2Tab.addEventListener("click", function () { switchMode("quiz2"); });
         storyTab.addEventListener("click", function () { switchMode("story"); });
+
+        // === TTS (Text-to-Speech via Puter.js + ElevenLabs) ===
+
+        var voicePresets = [
+            { name: "Rachel", id: "21m00Tcm4TlvDq8ikWAM" },
+            { name: "Adam", id: "pNInz6obpgDQGcFmaJgB" },
+            { name: "Bella", id: "EXAVITQu4vr4xnSDxMaL" },
+            { name: "Antoni", id: "ErXwobaYiN019PkySvjV" },
+            { name: "Domi", id: "AZnzlk1XvdvUeBnXmlld" },
+            { name: "Elli", id: "MF3mGyEYCl7XYWbV9V6O" },
+            { name: "Josh", id: "TxGEqnHWrfWFTfGW9XjX" },
+            { name: "Sam", id: "yoZ06aMxZJJ28mfd3POQ" }
+        ];
+
+        var ttsState = {
+            status: "idle",
+            audio: null,
+            voiceId: localStorage.getItem("tts_voice_id") || voicePresets[0].id,
+            model: localStorage.getItem("tts_model") || "eleven_multilingual_v2",
+            chunks: [],
+            currentChunk: 0
+        };
+
+        function ttsSplitText(text) {
+            text = text.replace(/\*(.*?)\*/g, "$1");
+            if (text.length <= 2800) return [text];
+            var chunks = [];
+            var remaining = text;
+            while (remaining.length > 0) {
+                if (remaining.length <= 2800) {
+                    chunks.push(remaining);
+                    break;
+                }
+                var slice = remaining.substring(0, 2800);
+                var splitAt = slice.lastIndexOf(". ");
+                if (splitAt === -1) splitAt = slice.lastIndexOf(".\n");
+                if (splitAt === -1) splitAt = slice.lastIndexOf(" ");
+                if (splitAt === -1) splitAt = 2800;
+                else splitAt += 1;
+                chunks.push(remaining.substring(0, splitAt).trim());
+                remaining = remaining.substring(splitAt).trim();
+            }
+            return chunks;
+        }
+
+        function ttsUpdateUI() {
+            var btn = document.getElementById("ttsPlayBtn");
+            var icon = document.getElementById("ttsIcon");
+            var label = document.getElementById("ttsLabel");
+
+            btn.className = "tts-play-btn";
+            icon.className = "tts-icon";
+
+            if (ttsState.status === "idle") {
+                icon.innerHTML = "&#9654;";
+                label.textContent = "Listen to this page";
+            } else if (ttsState.status === "loading") {
+                btn.classList.add("loading");
+                icon.innerHTML = "&#9696;";
+                icon.classList.add("spinning");
+                label.textContent = "Loading audio...";
+            } else if (ttsState.status === "playing") {
+                btn.classList.add("playing");
+                icon.innerHTML = "&#9632;";
+                label.textContent = "Stop reading";
+            } else if (ttsState.status === "error") {
+                btn.classList.add("error");
+                icon.innerHTML = "&#9888;";
+                label.textContent = "Error — try again";
+            }
+        }
+
+        function ttsStop() {
+            if (ttsState.audio) {
+                ttsState.audio.pause();
+                ttsState.audio.currentTime = 0;
+                ttsState.audio.onended = null;
+                ttsState.audio = null;
+            }
+            ttsState.status = "idle";
+            ttsState.chunks = [];
+            ttsState.currentChunk = 0;
+            ttsUpdateUI();
+        }
+
+        function ttsPlayChunk(index) {
+            if (index >= ttsState.chunks.length) {
+                ttsState.status = "idle";
+                ttsState.audio = null;
+                ttsUpdateUI();
+                return;
+            }
+            ttsState.currentChunk = index;
+
+            var timeoutId = setTimeout(function () {
+                if (ttsState.status === "loading") {
+                    ttsStop();
+                    showTtsNotification("Audio loading timed out. Please try again.", "error", 5000);
+                }
+            }, 30000);
+
+            puter.ai.txt2speech(ttsState.chunks[index], {
+                provider: "elevenlabs",
+                voice: ttsState.voiceId,
+                model: ttsState.model
+            }).then(function (audio) {
+                clearTimeout(timeoutId);
+                if (ttsState.status !== "loading" && ttsState.status !== "playing") return;
+                ttsState.audio = audio;
+                ttsState.status = "playing";
+                ttsUpdateUI();
+                audio.onended = function () {
+                    ttsPlayChunk(index + 1);
+                };
+                audio.play();
+            }).catch(function (err) {
+                clearTimeout(timeoutId);
+                handleTtsError(err);
+            });
+        }
+
+        function ttsPlay() {
+            if (ttsState.status === "loading" || ttsState.status === "playing") {
+                ttsStop();
+                return;
+            }
+
+            if (typeof puter === "undefined" || !puter.ai) {
+                showTtsNotification("Text-to-speech is not available. Puter.js failed to load.", "error", 5000);
+                return;
+            }
+
+            var rateLimitDate = localStorage.getItem("tts_rate_limit_date");
+            if (rateLimitDate) {
+                var now = new Date();
+                var limitDate = new Date(rateLimitDate);
+                var renewDate = new Date(limitDate.getFullYear(), limitDate.getMonth() + 1, 1);
+                if (now < renewDate) {
+                    showTtsNotification(
+                        "Monthly audio credits are used up. Credits renew on " +
+                        renewDate.toLocaleDateString("en-US", { month: "long", day: "numeric" }) + ".",
+                        "warning", 8000
+                    );
+                    return;
+                } else {
+                    localStorage.removeItem("tts_rate_limit_date");
+                }
+            }
+
+            var pageText = storyData.chapters[storyChapter].pages[storyPage];
+            ttsState.chunks = ttsSplitText(pageText);
+            ttsState.status = "loading";
+            ttsUpdateUI();
+            ttsPlayChunk(0);
+        }
+
+        function handleTtsError(err) {
+            ttsState.status = "error";
+            ttsState.audio = null;
+            ttsUpdateUI();
+
+            var isRateLimit = false;
+            if (err) {
+                var errStr = (typeof err === "string") ? err : JSON.stringify(err);
+                if (err.status === 429 || errStr.indexOf("rate_limit") !== -1 ||
+                    errStr.indexOf("quota") !== -1 || errStr.indexOf("limit") !== -1) {
+                    isRateLimit = true;
+                }
+            }
+
+            if (isRateLimit) {
+                localStorage.setItem("tts_rate_limit_date", new Date().toISOString());
+                var renewDate = new Date();
+                renewDate = new Date(renewDate.getFullYear(), renewDate.getMonth() + 1, 1);
+                showTtsNotification(
+                    "Monthly audio credits are used up. Free tier includes about 10 minutes per month. " +
+                    "Credits renew on " + renewDate.toLocaleDateString("en-US", { month: "long", day: "numeric" }) + ".",
+                    "warning", 10000
+                );
+            } else {
+                showTtsNotification("Could not load audio. Please try again.", "error", 5000);
+            }
+
+            setTimeout(function () {
+                if (ttsState.status === "error") {
+                    ttsState.status = "idle";
+                    ttsUpdateUI();
+                }
+            }, 3000);
+        }
+
+        function showTtsNotification(message, type, duration) {
+            var area = document.getElementById("ttsNotificationArea");
+            area.innerHTML = "";
+            var el = document.createElement("div");
+            el.className = "tts-notification " + type;
+            el.textContent = message;
+            area.appendChild(el);
+            setTimeout(function () {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, duration || 5000);
+        }
+
+        // Voice presets
+        (function initTtsSettings() {
+            var presetsContainer = document.getElementById("ttsVoicePresets");
+            voicePresets.forEach(function (preset) {
+                var chip = document.createElement("button");
+                chip.className = "tts-voice-chip" + (ttsState.voiceId === preset.id ? " active" : "");
+                chip.textContent = preset.name;
+                chip.setAttribute("data-voice-id", preset.id);
+                chip.addEventListener("click", function () {
+                    ttsState.voiceId = preset.id;
+                    localStorage.setItem("tts_voice_id", preset.id);
+                    document.getElementById("ttsVoiceId").value = "";
+                    presetsContainer.querySelectorAll(".tts-voice-chip").forEach(function (c) {
+                        c.classList.remove("active");
+                    });
+                    chip.classList.add("active");
+                });
+                presetsContainer.appendChild(chip);
+            });
+
+            var modelSelect = document.getElementById("ttsModel");
+            modelSelect.value = ttsState.model;
+            modelSelect.addEventListener("change", function () {
+                ttsState.model = modelSelect.value;
+                localStorage.setItem("tts_model", modelSelect.value);
+            });
+
+            var voiceIdInput = document.getElementById("ttsVoiceId");
+            voiceIdInput.addEventListener("change", function () {
+                var val = voiceIdInput.value.trim();
+                if (val) {
+                    ttsState.voiceId = val;
+                    localStorage.setItem("tts_voice_id", val);
+                    presetsContainer.querySelectorAll(".tts-voice-chip").forEach(function (c) {
+                        c.classList.remove("active");
+                    });
+                }
+            });
+        })();
+
+        // TTS button events
+        document.getElementById("ttsPlayBtn").addEventListener("click", ttsPlay);
+
+        document.getElementById("ttsSettingsBtn").addEventListener("click", function () {
+            var panel = document.getElementById("ttsSettingsPanel");
+            var btn = document.getElementById("ttsSettingsBtn");
+            if (panel.style.display === "none") {
+                panel.style.display = "block";
+                btn.classList.add("active");
+            } else {
+                panel.style.display = "none";
+                btn.classList.remove("active");
+            }
+        });
+
+        document.getElementById("ttsPreviewBtn").addEventListener("click", function () {
+            if (typeof puter === "undefined" || !puter.ai) {
+                showTtsNotification("Puter.js not loaded.", "error", 3000);
+                return;
+            }
+            var previewBtn = document.getElementById("ttsPreviewBtn");
+            previewBtn.textContent = "Loading...";
+            puter.ai.txt2speech("Hello! This is a preview of the selected voice. The story will sound like this.", {
+                provider: "elevenlabs",
+                voice: ttsState.voiceId,
+                model: ttsState.model
+            }).then(function (audio) {
+                previewBtn.textContent = "Preview Voice";
+                audio.play();
+            }).catch(function (err) {
+                previewBtn.textContent = "Preview Voice";
+                handleTtsError(err);
+            });
+        });
     </script>
 </body>
 </html>
