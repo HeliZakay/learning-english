@@ -266,6 +266,104 @@
             font-weight: 600;
         }
 
+        /* Type Quiz */
+        .type-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4338CA;
+            text-align: center;
+            background: #FFFFFF;
+            border: 2.5px solid #C7D2FE;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .type-input:focus {
+            outline: none;
+            border-color: #6366F1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .type-input.correct {
+            background: #D1FAE5;
+            border-color: #34D399;
+            color: #065F46;
+        }
+
+        .type-input.wrong {
+            background: #FEE2E2;
+            border-color: #F87171;
+            color: #991B1B;
+        }
+
+        .type-hint-display {
+            font-family: "Courier New", monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #6366F1;
+            min-height: 1.6em;
+            margin-bottom: 16px;
+            word-break: break-word;
+        }
+
+        .type-btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .type-hint-btn {
+            padding: 14px 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4338CA;
+            background: #EEF2FF;
+            border: 2.5px solid #C7D2FE;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.12s, background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .type-hint-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .type-hint-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .type-check-btn {
+            padding: 14px 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.12s;
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.25);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .type-check-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .type-check-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
         /* End screen */
         .quiz-end {
             display: none;
@@ -680,6 +778,7 @@
         <button class="mode-btn" id="quizTab">Quiz 1</button>
         <button class="mode-btn" id="flashcards2Tab">Flashcards 2</button>
         <button class="mode-btn" id="quiz2Tab">Quiz 2</button>
+        <button class="mode-btn" id="typeQuizTab">Type Quiz</button>
         <button class="mode-btn" id="storyTab">Story</button>
     </div>
 
@@ -714,6 +813,30 @@
                 <div class="end-score" id="endScore"></div>
                 <div class="end-message" id="endMessage"></div>
                 <button class="quiz-next-btn" style="display:block" id="playAgainBtn">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type Quiz — fill the blank, typed answer + progressive hints -->
+    <div class="quiz-container" id="typeQuizContainer">
+        <div class="quiz-card">
+            <div id="typeQuizGame">
+                <div class="quiz-sentence" id="typeSentence"></div>
+                <input type="text" class="type-input" id="typeAnswerInput" placeholder="Type the missing word..." autocomplete="off" autocapitalize="off" spellcheck="false">
+                <div class="type-hint-display" id="typeHintDisplay"></div>
+                <div class="type-btn-row">
+                    <button class="type-hint-btn" id="typeHintBtn">💡 Hint</button>
+                    <button class="type-check-btn" id="typeCheckBtn">Check</button>
+                </div>
+                <div class="quiz-feedback" id="typeFeedback"></div>
+                <button class="quiz-next-btn" id="typeNextBtn">Next Question →</button>
+                <div class="quiz-score" id="typeScoreEl"></div>
+            </div>
+            <div class="quiz-end" id="typeQuizEnd">
+                <div class="end-emoji" id="typeEndEmoji"></div>
+                <div class="end-score" id="typeEndScore"></div>
+                <div class="end-message" id="typeEndMessage"></div>
+                <button class="quiz-next-btn" style="display:block" id="typePlayAgainBtn">Play Again</button>
             </div>
         </div>
     </div>
@@ -886,6 +1009,114 @@
             { word: "Ranks", sentence: "The website ranks the hotels from best to worst.", quizSentence: "This list ranks the players by their scores.", image: "images/ranks.png", quizImage: "images/ranks.png", blank: "ranks" },
         ];
 
+        // Type Quiz — fill-the-blank with typed answers, drawn from batch1 + batch2.
+        // Each entry: { answer: text to type, sentence: contains "___" where the answer goes }.
+        // Sentences are newly written for this quiz (not reused from the flashcard/MC quiz).
+        const typeWords = [
+            // Batch 1
+            { answer: "drizzle", sentence: "It wasn't real rain, just a soft ___ that barely wet the ground." },
+            { answer: "intermittent", sentence: "The old lamp gave off an ___ light that flickered on and off." },
+            { answer: "likely", sentence: "Dark clouds are forming, so it is ___ that we'll get rain soon." },
+            { answer: "shortchange", sentence: "Check your change carefully so the shop doesn't ___ you." },
+            { answer: "settle", sentence: "After moving so many times, they finally chose to ___ in this town." },
+            { answer: "rose-tinted", sentence: "He remembers his childhood through ___ glasses and forgets the hard times." },
+            { answer: "soluble", sentence: "These vitamin tablets are ___, so they dissolve quickly in water." },
+            { answer: "like water off a duck's back", sentence: "Rude comments don't bother her at all — they're ___." },
+            { answer: "hyperbole", sentence: "Saying 'I'm so hungry I could eat a horse' is just ___." },
+            { answer: "distribute", sentence: "The teacher will ___ a worksheet to every student in the class." },
+            { answer: "shortage", sentence: "Because of the ___ of rain, the town asked everyone to save water." },
+            { answer: "memorize", sentence: "I try to ___ five new words every day before bed." },
+            { answer: "slither", sentence: "We watched the snake ___ slowly across the warm sand." },
+            { answer: "soar", sentence: "On windy days, eagles love to ___ high above the cliffs." },
+            { answer: "whale", sentence: "The huge ___ rose to the surface and blew water into the air." },
+            { answer: "beverages", sentence: "The café serves hot and cold ___ such as coffee and juice." },
+            { answer: "lead", sentence: "Years ago, water pipes were often made of ___, a heavy grey metal." },
+            { answer: "lid", sentence: "Put the ___ back on the jar so the cookies stay fresh." },
+            { answer: "traction", sentence: "Her small online shop is slowly gaining ___ as more people share it." },
+            { answer: "intake", sentence: "The nurse told him to lower his daily salt ___." },
+            { answer: "yawn", sentence: "The lesson was so boring that I couldn't stop trying to ___." },
+            { answer: "savoury", sentence: "I don't want anything sweet — I'd prefer something ___ like cheese." },
+            { answer: "hash brown", sentence: "For breakfast she ordered eggs with a crispy ___ on the side." },
+            { answer: "spooky", sentence: "The empty house looked ___ with its broken windows and dark rooms." },
+            { answer: "intrigued", sentence: "She was ___ by the locked box and wanted to know what was inside." },
+            { answer: "bump into", sentence: "I sometimes ___ old friends when I'm shopping in town." },
+            { answer: "commute", sentence: "His daily ___ to the office takes almost an hour by train." },
+            { answer: "grumpy", sentence: "Without his morning coffee, my dad is always ___." },
+            { answer: "flatmate", sentence: "My ___ and I share the rent and take turns cooking dinner." },
+            { answer: "landlord", sentence: "We asked our ___ to fix the broken heater in the flat." },
+            { answer: "easygoing", sentence: "She's so ___ that small problems never seem to upset her." },
+            { answer: "emphasized", sentence: "The teacher ___ that the test would cover everything from the book." },
+            { answer: "deliberate", sentence: "Knocking over the glass wasn't an accident — it was ___." },
+            { answer: "anxiety", sentence: "Speaking in front of the class fills him with ___." },
+            { answer: "drought", sentence: "The long ___ dried up the river and turned the fields brown." },
+            { answer: "frustrating", sentence: "It's so ___ when the bus is late and you miss your train." },
+            { answer: "accessing", sentence: "She had trouble ___ her account after forgetting the password." },
+            { answer: "at ease", sentence: "The nurse spoke gently to put the patient ___ before the operation." },
+            { answer: "cues", sentence: "Good actors wait for their ___ before speaking on stage." },
+            { answer: "significant", sentence: "Eating well made a ___ difference to how he felt every day." },
+            { answer: "transparency", sentence: "People want more ___ about how the company spends its money." },
+            { answer: "endure", sentence: "The climbers had to ___ freezing winds near the top of the mountain." },
+            { answer: "maintain", sentence: "If you ___ your bike well, it will last for many years." },
+            { answer: "strain", sentence: "Looking at a screen for hours can put a ___ on your eyes." },
+            { answer: "prolong", sentence: "Eating healthy food and exercising can ___ your life." },
+            { answer: "underlying", sentence: "The doctor searched for the ___ cause of her constant tiredness." },
+            { answer: "cohesion", sentence: "A winning team needs ___, with everyone working together." },
+            { answer: "cozy", sentence: "On cold nights, I love to curl up in my warm, ___ bed." },
+            { answer: "increasingly", sentence: "It is becoming ___ hard to find a cheap place to live." },
+            { answer: "recap", sentence: "At the end of the meeting, she gave a quick ___ of the main points." },
+            // Batch 2
+            { answer: "stir", sentence: "Use a spoon to ___ the sauce so it doesn't burn." },
+            { answer: "keep track", sentence: "I write everything in a diary to ___ of my appointments." },
+            { answer: "approximately", sentence: "The journey takes ___ three hours by train." },
+            { answer: "queue", sentence: "We waited in a long ___ outside the cinema for an hour." },
+            { answer: "crop", sentence: "Heavy rain ruined the farmer's ___ just before harvest." },
+            { answer: "call center", sentence: "She answers customer phone calls all day at a busy ___." },
+            { answer: "pacify", sentence: "He spoke softly to ___ the upset child." },
+            { answer: "aggravated", sentence: "Scratching the insect bite only ___ the itch." },
+            { answer: "apparently", sentence: "___, the shop is shut today — there's a sign on the door." },
+            { answer: "hangout", sentence: "That little café is our favourite ___ after work." },
+            { answer: "thrive", sentence: "Plants ___ when they get plenty of sunlight and water." },
+            { answer: "drop off", sentence: "Can you ___ this parcel at the post office on your way?" },
+            { answer: "sign up", sentence: "I want to ___ for a swimming class this summer." },
+            { answer: "ancestry", sentence: "She researched her ___ and discovered relatives in three countries." },
+            { answer: "reliable", sentence: "My old car is very ___ — it has never broken down." },
+            { answer: "trace", sentence: "The detectives could not find a single ___ of the missing ring." },
+            { answer: "ancestors", sentence: "Long ago, our ___ lived in caves and hunted for food." },
+            { answer: "origins", sentence: "Scientists are still studying the ___ of the universe." },
+            { answer: "bickering", sentence: "The two kids were ___ over who got the last slice of cake." },
+            { answer: "strait", sentence: "Ships sail carefully through the narrow ___ between the two islands." },
+            { answer: "lost track", sentence: "I was having so much fun that I ___ of time." },
+            { answer: "hazard", sentence: "A wet floor is a ___ because someone could slip and fall." },
+            { answer: "ripe", sentence: "Wait until the bananas turn yellow and ___ before you eat them." },
+            { answer: "decay", sentence: "Too much sugar can make your teeth ___." },
+            { answer: "wrinkles", sentence: "I ironed the shirt to get rid of the ___." },
+            { answer: "venue", sentence: "They booked a large ___ for the wedding party." },
+            { answer: "clay", sentence: "The artist shaped the soft ___ into a beautiful bowl." },
+            { answer: "cling", sentence: "Wet leaves often ___ to the bottom of your shoes." },
+            { answer: "kickstart", sentence: "A strong cup of coffee helps me ___ my morning." },
+            { answer: "down the line", sentence: "We might buy a bigger house ___, once we save enough money." },
+            { answer: "dense", sentence: "The fog was so ___ that the drivers could barely see the road." },
+            { answer: "fertile", sentence: "Crops grow well here because the soil is rich and ___." },
+            { answer: "protrusion", sentence: "He tripped over a small ___ sticking out of the floor." },
+            { answer: "drain", sentence: "Pull out the plug and let the bath water ___ away." },
+            { answer: "reminisce", sentence: "The old friends met to ___ about their school days." },
+            { answer: "questionnaire", sentence: "Please fill in this short ___ about your hotel stay." },
+            { answer: "distraction", sentence: "I turned off my phone to avoid any ___ while studying." },
+            { answer: "destruction", sentence: "The powerful storm left a trail of ___ across the town." },
+            { answer: "tweak", sentence: "The recipe was almost perfect — it just needed a small ___." },
+            { answer: "staple", sentence: "Rice is a ___ food in many parts of the world." },
+            { answer: "portion", sentence: "The waiter brought a huge ___ of pasta to the table." },
+            { answer: "trial and error", sentence: "He learned to bake through ___, trying again and again." },
+            { answer: "toad", sentence: "A fat brown ___ hopped across the path near the pond." },
+            { answer: "seasoning", sentence: "The soup tasted plain, so I added more ___." },
+            { answer: "enhance", sentence: "A little salt can ___ the flavour of almost any dish." },
+            { answer: "sleeves", sentence: "It was hot, so he rolled up his ___." },
+            { answer: "citadel", sentence: "The ancient ___ stood on a hill, guarding the city below." },
+            { answer: "tangible", sentence: "We need ___ proof — something we can actually see and touch." },
+            { answer: "rate", sentence: "After the meal, customers can ___ the restaurant online." },
+            { answer: "ranks", sentence: "This website ___ the hotels from best to worst." },
+        ];
+
         // Active batch — flashcard and quiz functions all read this reference.
         let words = words1;
 
@@ -1048,6 +1279,165 @@
         }
 
         document.getElementById("playAgainBtn").addEventListener("click", startQuiz);
+
+        // === Type Quiz (fill the blank, typed answer + progressive hints) ===
+
+        const TYPE_QUIZ_SIZE = 20;
+        let typeOrder = [];
+        let typeIndex = 0;
+        let typeScore = 0;
+        let typeAnswered = false;
+        let hintPositions = [];   // scattered order of letter indices to reveal
+        let hintRevealed = 0;     // how many letters are currently shown
+
+        function normalizeAnswer(s) {
+            return s.trim().toLowerCase().replace(/\s+/g, " ");
+        }
+
+        function startTypeQuiz() {
+            typeOrder = shuffle([...Array(typeWords.length).keys()]).slice(0, TYPE_QUIZ_SIZE);
+            typeIndex = 0;
+            typeScore = 0;
+            document.getElementById("typeQuizEnd").style.display = "none";
+            document.getElementById("typeQuizGame").style.display = "block";
+            showTypeQuestion();
+        }
+
+        function showTypeQuestion() {
+            typeAnswered = false;
+            const item = typeWords[typeOrder[typeIndex]];
+
+            const sentenceHTML = item.sentence.replace(
+                "___", '<span class="quiz-blank">_______</span>'
+            );
+            document.getElementById("typeSentence").innerHTML = sentenceHTML;
+
+            const input = document.getElementById("typeAnswerInput");
+            input.value = "";
+            input.disabled = false;
+            input.className = "type-input";
+
+            // Build a scattered reveal order from the answer's letter positions only.
+            hintPositions = shuffle(
+                [...item.answer].map((ch, i) => (/[a-z]/i.test(ch) ? i : -1)).filter(i => i !== -1)
+            );
+            hintRevealed = 0;
+
+            const hintBtn = document.getElementById("typeHintBtn");
+            hintBtn.disabled = false;
+            hintBtn.textContent = "💡 Hint";
+            document.getElementById("typeHintDisplay").textContent = "";
+
+            document.getElementById("typeCheckBtn").disabled = false;
+            document.getElementById("typeFeedback").textContent = "";
+            document.getElementById("typeFeedback").className = "quiz-feedback";
+            document.getElementById("typeNextBtn").style.display = "none";
+            document.getElementById("typeScoreEl").textContent =
+                typeScore + " / " + typeIndex + " correct  ·  Question " + (typeIndex + 1) + " of " + typeOrder.length;
+
+            input.focus();
+        }
+
+        function renderHintDisplay() {
+            const answer = typeWords[typeOrder[typeIndex]].answer;
+            const shown = new Set(hintPositions.slice(0, hintRevealed));
+            const chars = [...answer].map((ch, i) => {
+                if (!/[a-z]/i.test(ch)) return ch;        // spaces, hyphens, apostrophes always shown
+                return shown.has(i) ? ch : "_";
+            });
+            document.getElementById("typeHintDisplay").textContent = chars.join(" ");
+        }
+
+        document.getElementById("typeHintBtn").addEventListener("click", function () {
+            if (typeAnswered || hintRevealed >= hintPositions.length) return;
+            hintRevealed++;
+            renderHintDisplay();
+            if (hintRevealed >= hintPositions.length) {
+                this.disabled = true;
+                this.textContent = "No more hints";
+            }
+        });
+
+        function checkTypeAnswer() {
+            if (typeAnswered) return;
+            const input = document.getElementById("typeAnswerInput");
+            if (normalizeAnswer(input.value) === "") return;   // ignore empty submissions
+
+            typeAnswered = true;
+            const item = typeWords[typeOrder[typeIndex]];
+            const isCorrect = normalizeAnswer(input.value) === normalizeAnswer(item.answer);
+
+            input.disabled = true;
+            document.getElementById("typeCheckBtn").disabled = true;
+            document.getElementById("typeHintBtn").disabled = true;
+
+            const feedback = document.getElementById("typeFeedback");
+            if (isCorrect) {
+                typeScore++;
+                input.classList.add("correct");
+                feedback.textContent = correctMessages[Math.floor(Math.random() * correctMessages.length)];
+                feedback.className = "quiz-feedback correct";
+            } else {
+                input.classList.add("wrong");
+                feedback.textContent = wrongMessages[Math.floor(Math.random() * wrongMessages.length)] +
+                    " The answer is: " + item.answer;
+                feedback.className = "quiz-feedback wrong";
+            }
+
+            document.getElementById("typeScoreEl").textContent =
+                typeScore + " / " + (typeIndex + 1) + " correct  ·  Question " + (typeIndex + 1) + " of " + typeOrder.length;
+            document.getElementById("typeNextBtn").style.display = "block";
+        }
+
+        document.getElementById("typeCheckBtn").addEventListener("click", checkTypeAnswer);
+
+        document.getElementById("typeAnswerInput").addEventListener("keydown", function (e) {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            if (typeAnswered) {
+                advanceTypeQuiz();
+            } else {
+                checkTypeAnswer();
+            }
+        });
+
+        function advanceTypeQuiz() {
+            typeIndex++;
+            if (typeIndex >= typeOrder.length) {
+                showTypeEndScreen();
+            } else {
+                showTypeQuestion();
+            }
+        }
+
+        document.getElementById("typeNextBtn").addEventListener("click", advanceTypeQuiz);
+
+        function showTypeEndScreen() {
+            document.getElementById("typeQuizGame").style.display = "none";
+            document.getElementById("typeQuizEnd").style.display = "block";
+
+            const pct = Math.round((typeScore / typeOrder.length) * 100);
+            let emoji, message;
+            if (pct >= 90) {
+                emoji = "🌟";
+                message = "Amazing! You really know these words!";
+            } else if (pct >= 70) {
+                emoji = "😊";
+                message = "Great work! You are doing wonderfully!";
+            } else if (pct >= 50) {
+                emoji = "💪";
+                message = "Good effort! Practice makes perfect!";
+            } else {
+                emoji = "📚";
+                message = "Keep learning! You will get better every time!";
+            }
+
+            document.getElementById("typeEndEmoji").textContent = emoji;
+            document.getElementById("typeEndScore").textContent = typeScore + " / " + typeOrder.length + " correct";
+            document.getElementById("typeEndMessage").textContent = message;
+        }
+
+        document.getElementById("typePlayAgainBtn").addEventListener("click", startTypeQuiz);
 
         // === Story Reader ===
 
@@ -1220,11 +1610,13 @@
         const quizTab = document.getElementById("quizTab");
         const flashcards2Tab = document.getElementById("flashcards2Tab");
         const quiz2Tab = document.getElementById("quiz2Tab");
+        const typeQuizTab = document.getElementById("typeQuizTab");
         const storyTab = document.getElementById("storyTab");
         const cardContainer = document.querySelector(".card-container");
         const progressEl = document.getElementById("progress");
         const btnRow = document.querySelector(".btn-row");
         const quizContainer = document.getElementById("quizContainer");
+        const typeQuizContainer = document.getElementById("typeQuizContainer");
         const storyContainer = document.getElementById("storyContainer");
 
         function switchMode(mode) {
@@ -1233,12 +1625,14 @@
             quizTab.classList.remove("active");
             flashcards2Tab.classList.remove("active");
             quiz2Tab.classList.remove("active");
+            typeQuizTab.classList.remove("active");
             storyTab.classList.remove("active");
 
             cardContainer.style.display = "none";
             progressEl.style.display = "none";
             btnRow.style.display = "none";
             quizContainer.style.display = "none";
+            typeQuizContainer.style.display = "none";
             storyContainer.style.display = "none";
 
             if (mode === "flashcards" || mode === "flashcards2") {
@@ -1254,6 +1648,10 @@
                 (mode === "quiz2" ? quiz2Tab : quizTab).classList.add("active");
                 quizContainer.style.display = "block";
                 startQuiz();
+            } else if (mode === "typeQuiz") {
+                typeQuizTab.classList.add("active");
+                typeQuizContainer.style.display = "block";
+                startTypeQuiz();
             } else if (mode === "story") {
                 storyTab.classList.add("active");
                 storyContainer.style.display = "block";
@@ -1265,6 +1663,7 @@
         quizTab.addEventListener("click", function () { switchMode("quiz"); });
         flashcards2Tab.addEventListener("click", function () { switchMode("flashcards2"); });
         quiz2Tab.addEventListener("click", function () { switchMode("quiz2"); });
+        typeQuizTab.addEventListener("click", function () { switchMode("typeQuiz"); });
         storyTab.addEventListener("click", function () { switchMode("story"); });
 
         // === TTS (Text-to-Speech via Puter.js + ElevenLabs) ===
