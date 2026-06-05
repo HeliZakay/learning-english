@@ -578,6 +578,54 @@
             margin: 28px auto;
         }
 
+        .glossary-word {
+            border-bottom: 1px dotted #6366F1;
+            cursor: pointer;
+            color: inherit;
+        }
+        .glossary-word:active {
+            background: #EEF2FF;
+        }
+
+        .glossary-popover {
+            position: fixed;
+            z-index: 100;
+            max-width: 280px;
+            background: #FFFFFF;
+            border: 2px solid #C7D2FE;
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.22);
+            animation: tts-slide-in 0.18s ease;
+        }
+        .glossary-popover-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            border: none;
+            background: none;
+            font-size: 1.3rem;
+            line-height: 1;
+            color: #818CF8;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+        .glossary-popover-term {
+            font-weight: 700;
+            color: #4338CA;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+            padding-right: 18px;
+        }
+        .glossary-popover-meaning {
+            font-size: 0.95rem;
+            color: #1F2937;
+            line-height: 1.5;
+        }
+        .glossary-popover-meaning em {
+            color: #4B5563;
+        }
+
         .story-toc-item-sub {
             display: block;
             font-size: 0.95rem;
@@ -954,36 +1002,13 @@
                         <div class="story-progress-fill" id="storyProgressFill"></div>
                     </div>
                 </div>
-                <div class="tts-controls" id="ttsControls">
-                    <button class="tts-play-btn" id="ttsPlayBtn">
-                        <span class="tts-icon" id="ttsIcon">&#9654;</span>
-                        <span class="tts-label" id="ttsLabel">Listen to this page</span>
-                    </button>
-                    <button class="tts-settings-btn" id="ttsSettingsBtn" title="Voice Settings">&#9881;</button>
-                </div>
-                <div class="tts-settings-panel" id="ttsSettingsPanel" style="display:none">
-                    <div class="tts-settings-header">Voice Settings</div>
-                    <div class="tts-field">
-                        <label for="ttsModel">Model</label>
-                        <select id="ttsModel">
-                            <option value="eleven_multilingual_v2">Multilingual v2</option>
-                            <option value="eleven_flash_v2_5">Flash v2.5 (faster)</option>
-                            <option value="eleven_turbo_v2_5">Turbo v2.5 (fastest)</option>
-                            <option value="eleven_v3">v3 (latest)</option>
-                        </select>
-                    </div>
-                    <div class="tts-field">
-                        <label>Voice Presets</label>
-                        <div class="tts-voice-presets" id="ttsVoicePresets"></div>
-                    </div>
-                    <div class="tts-field">
-                        <label for="ttsVoiceId">Custom Voice ID</label>
-                        <input type="text" id="ttsVoiceId" placeholder="Paste an ElevenLabs voice ID">
-                    </div>
-                    <button class="tts-preview-btn" id="ttsPreviewBtn">Preview Voice</button>
-                </div>
                 <div id="ttsNotificationArea"></div>
                 <div class="story-page-content" id="storyPageContent"></div>
+                <div class="glossary-popover" id="glossaryPopover" style="display:none">
+                    <button class="glossary-popover-close" id="glossaryPopoverClose" aria-label="Close">&times;</button>
+                    <div class="glossary-popover-term" id="glossaryPopoverTerm"></div>
+                    <div class="glossary-popover-meaning" id="glossaryPopoverMeaning"></div>
+                </div>
                 <div class="story-nav">
                     <button class="story-back-page-btn hidden" id="storyPrevPageBtn">← Previous Page</button>
                     <button class="story-main-btn" id="storyNextPageBtn">Next Page →</button>
@@ -1652,6 +1677,217 @@ Somewhere in the city to the north, a queue was blinking, and strangers were wai
 **The end.**
     </script>
 
+    <script type="text/markdown" id="glossary-roots-department">
+# The Roots Department — Glossary
+
+Non-trivial words from the story, with their meaning **as they are used in the story**. (The 50 target vocabulary words are not included here.)
+
+---
+
+**alertness** — the state of being awake and watchful. *"An alertness sixty years on duty going off shift"* — Rosa's mind finally stops guarding.
+
+**amnesiac** — having no memory. The fig tree buds *"with amnesiac confidence"* — as if it has forgotten every bad thing that happened.
+
+**apron** — a piece of clothing worn over clothes to keep them clean while working.
+
+**archive** — a collection of old records and documents. *"That is the whole archive"* — all the family has is one man's memory.
+
+**armored** — protected, as if wearing armor. Dina arrives *"armored to the chin"* — emotionally defended.
+
+**barrier** — a fence or block that stops people from passing. At the port, it separates the family.
+
+**borderline** — the thin line between two states. The smell of figs is on the *"borderline"* between ripeness and rot.
+
+**catastrophe** — a complete disaster. Used half-jokingly for Maya's ugly first bowl.
+
+**cellar** — a cool underground room for storing things. The clay is *"cool as a cellar."*
+
+**centering** — placing the clay exactly in the middle of the spinning wheel. In the story it is also a life lesson: stay steady, be the center.
+
+**colander** — a kitchen bowl full of holes, used to drain water from food. Rosa's word for her own leaking memory: *"everything else is a colander."*
+
+**collapse** — to fall down suddenly. What badly centered clay does on the wheel.
+
+**coordinates** — the exact numbers that give a position on a map. Rosa is *"lost somewhere without coordinates"* — completely lost.
+
+**(war) correspondent** — a reporter who describes a war. Rosa tells neighborhood news in this dramatic voice.
+
+**corridor** — a long hallway, especially in a hospital.
+
+**crooked** — not straight; leaning. The most important word in the story: *"It's crooked. So is everything that survives."*
+
+**cumin** — a warm-tasting spice used in soup.
+
+**curriculum** — the planned content of lessons. On the wheel, *"failure was the curriculum"* — failing is how you learn.
+
+**defenses** — emotional protections. Rosa speaks once in *"a voice without any defenses in it."*
+
+**delighted** — very pleased.
+
+**diplomatic** — polite and careful, avoiding open conflict. Rosa pushes the laptop away half a centimeter — *"a diplomatic expulsion."*
+
+**dock** — the platform at a port where boats load and unload people.
+
+**drought** — a long period without rain.
+
+**emigrated** — left one's country to live in another. A joke about memory: *"the date had emigrated for good."*
+
+**empire** — a great kingdom. Used playfully for the mint and the toad's territory.
+
+**expulsion** — the act of pushing someone or something out.
+
+**fever** — a high body temperature when you are sick.
+
+**fluorescent** — a kind of flat, bright white electric light, typical of offices and hospitals.
+
+**fortress** — a strong building made to defend a city.
+
+**funneled** — narrowed down and passed through, like liquid through a funnel. The ancestors' faces *"funneled down the centuries"* into Maya.
+
+**fury** — strong, burning anger.
+
+**generous** — kind and giving. *"A bowl by a generous court"* — only a kind judge would call it a bowl.
+
+**glaze** — the glassy coating baked onto pottery. *"A good glaze hides nothing."*
+
+**grinding** — working slowly, steadily, without stopping. The algorithm *"grinding patiently"* through millions of DNA samples.
+
+**gulls** — white seabirds found around harbors.
+
+**harbor** — a protected place by the sea where boats stay.
+
+**hum** — a low, continuous sound, like the turning wheel.
+
+**immovable** — impossible to move; refusing to change. Rosa's voice when she shuts a subject down.
+
+**insolent** — boldly disrespectful. The mint grows back *"insolent"* — as if it never asked permission.
+
+**kiln** — a very hot oven used to fire (harden) pottery.
+
+**knuckle** — the joint in the middle of a finger.
+
+**latitude** — a position on the map (north–south). The laptop *"knew the latitude of all of this and none of it"* — it knows the location, not the meaning.
+
+**listing** — leaning to one side (said about boats). Maya's bowl has *"a lean like a listing boat."*
+
+**load-bearing** — holding up the weight of a building. Said about a wall you must not remove. *"The silence was load-bearing"* — the family stood on it.
+
+**lurch** — a sudden, unsteady movement, like a drunk person.
+
+**luxury** — something pleasant that you can live without. *"Ancestors are a luxury. We left in a hurry."*
+
+**masterpiece** — an artist's best, most perfect work.
+
+**mineral** — like stone or earth. The *"mineral smell of clay."*
+
+**murmur** — soft, low, unclear speech, like talking in sleep.
+
+**neurologist** — a doctor who treats the brain and memory.
+
+**numb** — without feeling. Maya's arm goes numb because she refuses to move it.
+
+**pamphlet** — a thin information booklet, like the one doctors give after a diagnosis.
+
+**parliament** — a group that meets to discuss and decide. A joke: the wasps hold *"their slow parliament"* over the fallen figs.
+
+**patient** — two meanings in the story: (1) a person being treated by a doctor; (2) calm, able to wait without anger.
+
+**peninsula** — land almost completely surrounded by water (the *"Iberian Peninsula"* = Spain and Portugal).
+
+**pinch** — to press something between finger and thumb. How you remove tomato *suckers*.
+
+**plateau** — a flat period when an illness stops getting worse. The story's most hopeful medical word: *"some hold a plateau for years."*
+
+**pothole** — a hole in a road. Maya is angry that her grandmother is filed under the same word ("hazard") as a pothole.
+
+**qualifiers** — small words that soften or limit a statement, like *early* and *mild* after a diagnosis.
+
+**recite** — to say aloud from memory. Rosa recites pottery rules *"like scripture."*
+
+**refund** — money given back for something you bought.
+
+**resident** — a person (or toad) who lives in a place.
+
+**retired** — stopped working because of age. Rosa says her hands *"retired before the rest of her."*
+
+**revelation** — a moment when a hidden truth is shown. The website's slow opening of the map is *"a little theater of revelation."*
+
+**revolution** — one full turn of a wheel. (Also fits the bigger meaning: a complete change.)
+
+**rib (tool)** — a flat tool used to smooth and straighten the wall of a pot.
+
+**rim** — the top edge of a bowl or cup.
+
+**rounding error** — a tiny difference that comes from rounding numbers; something so small it can be ignored. *"A rounding error of history."*
+
+**scandal** — a shocking event. Rosa uses it as a compliment: *"The crop is a scandal"* — shockingly good.
+
+**scar** — the mark left on skin after a wound heals. Every pottery rule is *"the scar of ten thousand broken pots."*
+
+**scripture** — holy writings. Rosa recites her rules like holy text.
+
+**sepia** — the brown-yellow color of very old photographs.
+
+**settle / settled** — to calm down and come to rest. Something behind Rosa's face *"moved like water under ice, and settled."*
+
+**smug** — too pleased with yourself. The glowing dot on the map looks *"smug."*
+
+**snort** — a rough sound through the nose showing you don't respect something.
+
+**sponge** — a soft object that holds water. Little Estreya's job at the wheel: *"the minister of water."*
+
+**stamp** — the official tool (and mark) used to approve papers. *"A man at a table with a stamp deciding the future of the world one family at a time."*
+
+**statistics** — numbers that measure performance, like call times.
+
+**stubborn** — refusing to change or give up.
+
+**suckers** — small unwanted shoots that grow on a tomato plant and must be pinched off.
+
+**supervise** — to watch over work and give directions. Rosa supervises from her chair.
+
+**surrender** — to give up, to stop fighting. *"The mint surrendered first."*
+
+**synagogue** — a Jewish house of prayer. Its record books were destroyed with the city.
+
+**synthetic** — artificial, made by machines, not natural. The *"synthetic strings"* of hold music.
+
+**tenderness** — soft, gentle love.
+
+**treaty** — a formal agreement to stop fighting. Rosa and Dina stop arguing *"by unspoken treaty."*
+
+**undignified** — embarrassing; without honor. Spitting into the tube is *"an undignified process."*
+
+**urgent** — needing action right now.
+
+**vault** — the heavy safe room of a bank. The clinic's doors *"still wearing the heavy doors of vaults."*
+
+**veteran** — a person with long experience.
+
+**visa** — official permission to enter a country. A metaphor: in the country of clay-talk, *"both of them had visas."*
+
+**wedge (clay)** — to press and fold clay again and again to push out air bubbles.
+
+**weightlessness** — the state of having no weight. The percentages have *"the strange weightlessness of a fact about someone else."*
+
+**wicker** — chair material made of woven dry branches.
+
+**wobble** — to shake unsteadily from side to side.
+
+**workshop** — a place where things are made by hand. Rosa's father's pottery workshop, two streets above the harbor.
+
+---
+
+## The old Spanish (Ladino) phrases
+
+The family's old language, carried out of Spain five hundred years ago:
+
+- **Estreya** — "star."
+- **Dame la mano** — "Give me your hand."
+- **Ya viene el vapor** — "The boat (steamship) is coming." *Vapor* is the old word for a steamship.
+- **Aquí está la mano** — "Here is the hand."
+    </script>
+
     <script>
         const words1 = [
             { word: "Drizzle", sentence: "Take an umbrella — there is a light drizzle outside.", quizSentence: "We went for a walk in the drizzle and got a little wet.", image: "images/drizzle.png", quizImage: "https://images.unsplash.com/photo-1523889739556-7d3a75db3e35?w=400&fit=crop" },
@@ -2317,9 +2553,75 @@ Somewhere in the city to the north, a queue was blinking, and strangers were wai
             return { title: title, chapters: result };
         }
 
+        // Parse a glossary markdown file (lines of "**term** — meaning") into
+        // { entries:[{term, meaningHtml}], formMap:{ surfaceForm -> entryIndex },
+        //   regex } so hard words can be matched (with light inflections) in the
+        // story text and tapped for an in-context definition.
+        function parseGlossary(md) {
+            function gInline(text) {
+                return text
+                    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+                    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+            }
+            function variants(base) {
+                var b = base.toLowerCase();
+                var out = [b, b + "s"];
+                var last = b.charAt(b.length - 1);
+                if (last === "e") {
+                    var st = b.slice(0, -1);
+                    out.push(st + "ed", st + "ing");
+                } else if (last === "y" && b.length > 2) {
+                    var yy = b.slice(0, -1);
+                    out.push(yy + "ies", yy + "ied");
+                } else if (b.length >= 5) {
+                    out.push(b + "es", b + "ed", b + "ing");
+                }
+                return out;
+            }
+
+            var entries = [];
+            var formMap = Object.create(null);
+            var allForms = [];
+            function addForm(form, idx) {
+                form = form.toLowerCase();
+                if (!form || form in formMap) return;
+                formMap[form] = idx;
+                allForms.push(form);
+            }
+
+            md.replace(/\r\n/g, "\n").split("\n").forEach(function (line) {
+                var m = line.match(/^\s*(?:[-*]\s+)?\*\*(.+?)\*\*\s*[–—-]\s*(.+?)\s*$/);
+                if (!m) return;
+                var termRaw = m[1].trim();
+                var idx = entries.length;
+                entries.push({ term: termRaw, meaningHtml: gInline(m[2].trim()) });
+                termRaw.split("/").forEach(function (part) {
+                    var clean = part.replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+                    if (!clean) return;
+                    if (/[\s-]/.test(clean)) {
+                        addForm(clean, idx); // phrase / hyphenated: match verbatim
+                    } else {
+                        variants(clean).forEach(function (f) { addForm(f, idx); });
+                    }
+                });
+            });
+
+            allForms.sort(function (a, b) { return b.length - a.length; });
+            var escaped = allForms.map(function (f) {
+                return f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            });
+            var regex = escaped.length
+                ? new RegExp("\\b(?:" + escaped.join("|") + ")\\b", "gi")
+                : null;
+            return { entries: entries, formMap: formMap, regex: regex };
+        }
+
         const rootsStory = parseChapteredStory(
             document.getElementById("story-roots-department").textContent,
             "The Roots Department"
+        );
+        rootsStory.glossary = parseGlossary(
+            document.getElementById("glossary-roots-department").textContent
         );
 
         const stories = [lettersStory, rootsStory];
@@ -2425,8 +2727,10 @@ Somewhere in the city to the north, a queue was blinking, and strangers were wai
                 progressFill.style.width = (((storyChapter + 1) / story.chapters.length) * 100) + "%";
             }
 
-            document.getElementById("storyPageContent").innerHTML =
-                renderStoryMarkdown(chapter.pages[storyPage]);
+            var pageContent = document.getElementById("storyPageContent");
+            pageContent.innerHTML = renderStoryMarkdown(chapter.pages[storyPage]);
+            hideGlossaryPopover();
+            if (story.glossary) applyGlossary(pageContent, story.glossary);
 
             var prevBtn = document.getElementById("storyPrevPageBtn");
             if (storyPage === 0) {
@@ -2446,6 +2750,112 @@ Somewhere in the city to the north, a queue was blinking, and strangers were wai
 
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
+
+        // Underline the first occurrence of each glossary word in the rendered
+        // page. Walks text nodes (never the HTML string) so existing <strong>/
+        // <em> tags are preserved; wraps matches in <span class="glossary-word">.
+        function applyGlossary(container, glossary) {
+            if (!glossary || !glossary.regex) return;
+            var re = glossary.regex;
+            var used = new Set();
+            var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+            var nodes = [];
+            var node;
+            while ((node = walker.nextNode())) nodes.push(node);
+
+            nodes.forEach(function (textNode) {
+                var text = textNode.nodeValue;
+                re.lastIndex = 0;
+                var ranges = [];
+                var m;
+                while ((m = re.exec(text))) {
+                    var idx = glossary.formMap[m[0].toLowerCase()];
+                    if (idx !== undefined && !used.has(idx)) {
+                        used.add(idx);
+                        ranges.push({ start: m.index, end: m.index + m[0].length, idx: idx });
+                    }
+                    if (m.index === re.lastIndex) re.lastIndex++;
+                }
+                if (!ranges.length) return;
+
+                var frag = document.createDocumentFragment();
+                var pos = 0;
+                ranges.forEach(function (r) {
+                    if (r.start > pos) {
+                        frag.appendChild(document.createTextNode(text.slice(pos, r.start)));
+                    }
+                    var span = document.createElement("span");
+                    span.className = "glossary-word";
+                    span.setAttribute("data-gi", r.idx);
+                    span.textContent = text.slice(r.start, r.end);
+                    frag.appendChild(span);
+                    pos = r.end;
+                });
+                if (pos < text.length) {
+                    frag.appendChild(document.createTextNode(text.slice(pos)));
+                }
+                textNode.parentNode.replaceChild(frag, textNode);
+            });
+        }
+
+        var glossaryPopover = document.getElementById("glossaryPopover");
+
+        function hideGlossaryPopover() {
+            glossaryPopover.style.display = "none";
+            glossaryPopover._anchor = null;
+        }
+
+        function showGlossaryPopover(wordEl) {
+            var glossary = stories[currentStory].glossary;
+            if (!glossary) return;
+            var entry = glossary.entries[parseInt(wordEl.getAttribute("data-gi"), 10)];
+            if (!entry) return;
+
+            document.getElementById("glossaryPopoverTerm").textContent = entry.term;
+            document.getElementById("glossaryPopoverMeaning").innerHTML = entry.meaningHtml;
+
+            glossaryPopover.style.visibility = "hidden";
+            glossaryPopover.style.display = "block";
+            var rect = wordEl.getBoundingClientRect();
+            var pw = glossaryPopover.offsetWidth;
+            var ph = glossaryPopover.offsetHeight;
+            var left = rect.left + rect.width / 2 - pw / 2;
+            left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+            var top = rect.bottom + 8;
+            if (top + ph > window.innerHeight - 8) top = rect.top - ph - 8;
+            if (top < 8) top = 8;
+            glossaryPopover.style.left = left + "px";
+            glossaryPopover.style.top = top + "px";
+            glossaryPopover.style.visibility = "visible";
+            glossaryPopover._anchor = wordEl;
+        }
+
+        document.getElementById("storyPageContent").addEventListener("click", function (e) {
+            var wordEl = e.target.closest ? e.target.closest(".glossary-word") : null;
+            if (!wordEl) return;
+            e.stopPropagation();
+            if (glossaryPopover._anchor === wordEl && glossaryPopover.style.display !== "none") {
+                hideGlossaryPopover();
+            } else {
+                showGlossaryPopover(wordEl);
+            }
+        });
+
+        document.getElementById("glossaryPopoverClose").addEventListener("click", function (e) {
+            e.stopPropagation();
+            hideGlossaryPopover();
+        });
+
+        document.addEventListener("click", function (e) {
+            if (glossaryPopover.style.display === "none") return;
+            if (glossaryPopover.contains(e.target)) return;
+            if (e.target.closest && e.target.closest(".glossary-word")) return;
+            hideGlossaryPopover();
+        });
+
+        window.addEventListener("scroll", function () {
+            if (glossaryPopover.style.display !== "none") hideGlossaryPopover();
+        }, true);
 
         document.getElementById("storyNextPageBtn").addEventListener("click", function () {
             var story = stories[currentStory];
@@ -2618,6 +3028,8 @@ Somewhere in the city to the north, a queue was blinking, and strangers were wai
             var icon = document.getElementById("ttsIcon");
             var label = document.getElementById("ttsLabel");
 
+            if (!btn || !icon || !label) return;
+
             btn.className = "tts-play-btn";
             icon.className = "tts-icon";
 
@@ -2771,80 +3183,6 @@ Somewhere in the city to the north, a queue was blinking, and strangers were wai
             }, duration || 5000);
         }
 
-        // Voice presets
-        (function initTtsSettings() {
-            var presetsContainer = document.getElementById("ttsVoicePresets");
-            voicePresets.forEach(function (preset) {
-                var chip = document.createElement("button");
-                chip.className = "tts-voice-chip" + (ttsState.voiceId === preset.id ? " active" : "");
-                chip.textContent = preset.name;
-                chip.setAttribute("data-voice-id", preset.id);
-                chip.addEventListener("click", function () {
-                    ttsState.voiceId = preset.id;
-                    localStorage.setItem("tts_voice_id", preset.id);
-                    document.getElementById("ttsVoiceId").value = "";
-                    presetsContainer.querySelectorAll(".tts-voice-chip").forEach(function (c) {
-                        c.classList.remove("active");
-                    });
-                    chip.classList.add("active");
-                });
-                presetsContainer.appendChild(chip);
-            });
-
-            var modelSelect = document.getElementById("ttsModel");
-            modelSelect.value = ttsState.model;
-            modelSelect.addEventListener("change", function () {
-                ttsState.model = modelSelect.value;
-                localStorage.setItem("tts_model", modelSelect.value);
-            });
-
-            var voiceIdInput = document.getElementById("ttsVoiceId");
-            voiceIdInput.addEventListener("change", function () {
-                var val = voiceIdInput.value.trim();
-                if (val) {
-                    ttsState.voiceId = val;
-                    localStorage.setItem("tts_voice_id", val);
-                    presetsContainer.querySelectorAll(".tts-voice-chip").forEach(function (c) {
-                        c.classList.remove("active");
-                    });
-                }
-            });
-        })();
-
-        // TTS button events
-        document.getElementById("ttsPlayBtn").addEventListener("click", ttsPlay);
-
-        document.getElementById("ttsSettingsBtn").addEventListener("click", function () {
-            var panel = document.getElementById("ttsSettingsPanel");
-            var btn = document.getElementById("ttsSettingsBtn");
-            if (panel.style.display === "none") {
-                panel.style.display = "block";
-                btn.classList.add("active");
-            } else {
-                panel.style.display = "none";
-                btn.classList.remove("active");
-            }
-        });
-
-        document.getElementById("ttsPreviewBtn").addEventListener("click", function () {
-            if (typeof puter === "undefined" || !puter.ai) {
-                showTtsNotification("Puter.js not loaded.", "error", 3000);
-                return;
-            }
-            var previewBtn = document.getElementById("ttsPreviewBtn");
-            previewBtn.textContent = "Loading...";
-            puter.ai.txt2speech("Hello! This is a preview of the selected voice. The story will sound like this.", {
-                provider: "elevenlabs",
-                voice: ttsState.voiceId,
-                model: ttsState.model
-            }).then(function (audio) {
-                previewBtn.textContent = "Preview Voice";
-                audio.play();
-            }).catch(function (err) {
-                previewBtn.textContent = "Preview Voice";
-                handleTtsError(err);
-            });
-        });
     </script>
 </body>
 </html>
