@@ -1,0 +1,7 @@
+{
+  // Cloudflare Worker for the Talk feature (see ../talk-feature-plan.md).
+  // Deploy with: npx wrangler deploy (requires `npx wrangler login` once).
+  "name": "talk-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-05-03"
+}

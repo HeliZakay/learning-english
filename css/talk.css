@@ -38,3 +38,23 @@
     color: #4B5563;
     line-height: 1.5;
 }
+
+.talk-status {
+    margin-top: 20px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    display: inline-block;
+    font-size: 14px;
+    background: #E0E7FF;
+    color: #4B5563;
+}
+
+.talk-status.connected {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.talk-status.error {
+    background: #FEE2E2;
+    color: #991B1B;
+}

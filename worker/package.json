@@ -1,0 +1,13 @@
+{
+  "name": "talk-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker for the Talk conversation feature: keeps API keys secret and proxies chat/speech requests.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}
