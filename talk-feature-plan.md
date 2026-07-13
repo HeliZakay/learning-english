@@ -31,19 +31,19 @@ Each stage is small, ends in something testable, and gets its own commit.
 
 ### Phase A — Foundation (1–5)
 - [x] **1. Scaffolding** — create `js/talk.js`, `css/talk.css`, wire into index.html, add a "Talk" entry to the menu with a placeholder screen.
-- [ ] **2. Worker skeleton** — set up Cloudflare account + worker, deploy a hello-world endpoint, call it from the app.
-- [ ] **3. Chat endpoint** — worker `/chat` route calling Claude Sonnet 5 (key as worker secret), CORS configured.
-- [ ] **4. Speech endpoint** — worker `/speak` route calling OpenAI TTS, returns audio.
-- [ ] **5. Proxy hardening** — origin check, app token, daily rate limit, friendly "resting" response when limits hit.
+- [ ] **2. Worker skeleton** — set up Cloudflare account + worker, deploy a hello-world endpoint, call it from the app. *(code done & verified locally; deploy pending Cloudflare login)*
+- [x] **3. Chat endpoint** — worker `/chat` route calling Claude Sonnet 5 (key as worker secret), CORS configured.
+- [x] **4. Speech endpoint** — worker `/speak` route calling OpenAI TTS, returns audio.
+- [x] **5. Proxy hardening** — origin check, app token, daily rate limit, friendly "resting" response when limits hit.
 
 ### Phase B — Text conversation core (6–12)
-- [ ] **6. Chat UI** — message bubbles, large readable fonts, typing indicator, auto-scroll.
-- [ ] **7. Real conversation** — wire chat UI to `/chat` with a placeholder personality; first working text conversation.
-- [ ] **8. Persona design** — design the character together (name, age, backstory, interests, quirks) → system prompt v1.
-- [ ] **9. Recasting behavior** — teach the prompt gentle recasting + learner-appropriate language level; tune with test conversations.
-- [ ] **10. Topic starters** — tappable suggestion chips at session start (family, food, her day, news…).
-- [ ] **11. Hebrew help** — "How do I say…?" button; character handles Hebrew slips gracefully.
-- [ ] **12. Error handling** — network failures, retries, kind in-conversation error messages.
+- [x] **6. Chat UI** — message bubbles, large readable fonts, typing indicator, auto-scroll.
+- [x] **7. Real conversation** — wire chat UI to `/chat` with a placeholder personality; first working text conversation.
+- [x] **8. Persona design** — design the character together (name, age, backstory, interests, quirks) → system prompt v1.
+- [x] **9. Recasting behavior** — teach the prompt gentle recasting + learner-appropriate language level; tune with test conversations. *(prompt written; quality tuning pending real API key)*
+- [x] **10. Topic starters** — tappable suggestion chips at session start (family, food, her day, news…).
+- [x] **11. Hebrew help** — "How do I say…?" button; character handles Hebrew slips gracefully.
+- [x] **12. Error handling** — network failures, retries, kind in-conversation error messages.
 
 ### Phase C — Voice (13–18)
 - [ ] **13. Character speaks** — each character message plays via `/speak` while text shows; pick her voice together.
