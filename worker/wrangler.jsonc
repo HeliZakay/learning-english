@@ -3,5 +3,12 @@
   // Deploy with: npx wrangler deploy (requires `npx wrangler login` once).
   "name": "talk-worker",
   "main": "src/index.js",
-  "compatibility_date": "2026-05-03"
+  "compatibility_date": "2026-05-03",
+  // Not secrets: the token ships in the app's public JS anyway (it blocks
+  // drive-by abuse, not determined attackers). Real secrets (API keys) are
+  // set with `npx wrangler secret put`, never in this file.
+  "vars": {
+    "TALK_APP_TOKEN": "talk-GAcDReX5Mh5WXlfT",
+    "TALK_DAILY_LIMIT": "300"
+  }
 }
