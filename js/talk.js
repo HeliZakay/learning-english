@@ -4,10 +4,10 @@
 // identifiers are talk-prefixed to avoid colliding with the inline script's
 // globals.
 
-// Filled in once the Cloudflare Worker is deployed (Stage 2). Until then the
-// Talk screen shows "not connected". For local testing, override with:
+// The deployed Cloudflare Worker (worker/). For local testing against
+// `wrangler dev`, override with:
 //   localStorage.setItem("talk_worker_url", "http://localhost:8787")
-var TALK_WORKER_URL = "";
+var TALK_WORKER_URL = "https://talk-worker.helizakay1.workers.dev";
 
 // Sent as the X-Talk-Token header on /chat and /speak. Must match
 // TALK_APP_TOKEN in worker/wrangler.jsonc. Not a secret — it ships in this
