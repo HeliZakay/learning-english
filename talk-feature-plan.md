@@ -31,7 +31,7 @@ Each stage is small, ends in something testable, and gets its own commit.
 
 ### Phase A — Foundation (1–5)
 - [x] **1. Scaffolding** — create `js/talk.js`, `css/talk.css`, wire into index.html, add a "Talk" entry to the menu with a placeholder screen.
-- [ ] **2. Worker skeleton** — set up Cloudflare account + worker, deploy a hello-world endpoint, call it from the app. *(code done & verified locally; deploy pending Cloudflare login)*
+- [x] **2. Worker skeleton** — set up Cloudflare account + worker, deploy a hello-world endpoint, call it from the app. *(live at https://talk-worker.helizakay1.workers.dev)*
 - [x] **3. Chat endpoint** — worker `/chat` route calling Claude Sonnet 5 (key as worker secret), CORS configured.
 - [x] **4. Speech endpoint** — worker `/speak` route calling OpenAI TTS, returns audio.
 - [x] **5. Proxy hardening** — origin check, app token, daily rate limit, friendly "resting" response when limits hit.
