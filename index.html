@@ -6,6 +6,7 @@
     <title>My English Words</title>
     <!-- Puter.js (Story text-to-speech) — disabled because it errors when opening the file directly (file://). Re-enable by uncommenting and serving via a local web server. -->
     <!-- <script src="https://js.puter.com/v2/"></script> -->
+    <link rel="stylesheet" href="css/talk.css">
     <style>
         * {
             margin: 0;
@@ -910,6 +911,7 @@
             <button class="mode-btn" id="quiz2Tab">Quiz 2</button>
             <button class="mode-btn" id="typeQuizTab">Type Quiz</button>
             <button class="mode-btn" id="storyTab">Story</button>
+            <button class="mode-btn" id="talkTab">Talk</button>
         </div>
     </div>
 
@@ -1015,6 +1017,15 @@
                 </div>
             </div>
             <button class="story-toc-btn" id="storyBackToTocBtn">☰ Table of Contents</button>
+        </div>
+    </div>
+
+    <!-- Talk — conversation with a character (feature under construction) -->
+    <div class="talk-container" id="talkContainer">
+        <div class="talk-card">
+            <div class="talk-avatar-placeholder">💬</div>
+            <div class="talk-title">Talk</div>
+            <div class="talk-subtitle">A friend to talk with is coming soon...</div>
         </div>
     </div>
 
@@ -2809,6 +2820,7 @@ Non-trivial words from the story, with their meaning **as they are used in the s
         const quiz2Tab = document.getElementById("quiz2Tab");
         const typeQuizTab = document.getElementById("typeQuizTab");
         const storyTab = document.getElementById("storyTab");
+        const talkTab = document.getElementById("talkTab");
         const hamburgerBtn = document.getElementById("hamburgerBtn");
         const hamburgerLabel = document.getElementById("hamburgerLabel");
         const modeToggle = document.getElementById("modeToggle");
@@ -2818,6 +2830,7 @@ Non-trivial words from the story, with their meaning **as they are used in the s
         const quizContainer = document.getElementById("quizContainer");
         const typeQuizContainer = document.getElementById("typeQuizContainer");
         const storyContainer = document.getElementById("storyContainer");
+        const talkContainer = document.getElementById("talkContainer");
 
         function switchMode(mode) {
             ttsStop();
@@ -2827,6 +2840,7 @@ Non-trivial words from the story, with their meaning **as they are used in the s
             quiz2Tab.classList.remove("active");
             typeQuizTab.classList.remove("active");
             storyTab.classList.remove("active");
+            talkTab.classList.remove("active");
 
             cardContainer.style.display = "none";
             progressEl.style.display = "none";
@@ -2834,6 +2848,7 @@ Non-trivial words from the story, with their meaning **as they are used in the s
             quizContainer.style.display = "none";
             typeQuizContainer.style.display = "none";
             storyContainer.style.display = "none";
+            talkContainer.style.display = "none";
 
             if (mode === "flashcards" || mode === "flashcards2") {
                 words = mode === "flashcards2" ? words2 : words1;
@@ -2856,6 +2871,10 @@ Non-trivial words from the story, with their meaning **as they are used in the s
                 storyTab.classList.add("active");
                 storyContainer.style.display = "block";
                 showStoryLibrary();
+            } else if (mode === "talk") {
+                talkTab.classList.add("active");
+                talkContainer.style.display = "block";
+                startTalk();
             }
 
             const activeBtn = modeToggle.querySelector(".mode-btn.active");
@@ -2888,6 +2907,7 @@ Non-trivial words from the story, with their meaning **as they are used in the s
         quiz2Tab.addEventListener("click", function () { switchMode("quiz2"); });
         typeQuizTab.addEventListener("click", function () { switchMode("typeQuiz"); });
         storyTab.addEventListener("click", function () { switchMode("story"); });
+        talkTab.addEventListener("click", function () { switchMode("talk"); });
 
         // === TTS (Text-to-Speech via Puter.js + ElevenLabs) ===
 
@@ -3098,5 +3118,6 @@ Non-trivial words from the story, with their meaning **as they are used in the s
         }
 
     </script>
+    <script src="js/talk.js"></script>
 </body>
 </html>
