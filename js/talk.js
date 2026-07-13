@@ -205,13 +205,42 @@ function talkRequestReply() {
             talkAppendBubble("character", data.reply);
         })
         .catch(function (err) {
-            talkAppendBubble("error", "Something went wrong. Please try again.");
+            talkShowError(err && err.code);
         })
         .then(function () {
             talkHideTyping();
             talkState.sending = false;
             document.getElementById("talkSendBtn").disabled = false;
         });
+}
+
+// === Error handling ===
+
+function talkErrorInfo(code) {
+    if (code === "daily_limit") {
+        return { text: "She's had a lot of conversations today and is resting. 🌙 Come back tomorrow!", retry: false };
+    }
+    if (code === "network") {
+        return { text: "No connection. Check the internet and try again.", retry: true };
+    }
+    return { text: "She didn't catch that — something went wrong on her side.", retry: true };
+}
+
+function talkShowError(code) {
+    var info = talkErrorInfo(code);
+    var bubble = talkAppendBubble("error", info.text);
+    if (info.retry) {
+        var btn = document.createElement("button");
+        btn.className = "talk-retry-btn";
+        btn.textContent = "Try again";
+        btn.addEventListener("click", function () {
+            bubble.parentNode.removeChild(bubble);
+            // History already holds the user's turn — no duplicate bubble.
+            talkRequestReply();
+        });
+        bubble.appendChild(btn);
+        talkScrollDown();
+    }
 }
 
 // === Hebrew help ===
