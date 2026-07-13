@@ -214,8 +214,21 @@ function talkRequestReply() {
         });
 }
 
+// === Hebrew help ===
+
+// "How do I say...?" — prefills the input with Hebrew so mom completes the
+// phrase and sends normally; Dalia answers with the English and carries on.
+function talkHelp() {
+    var input = document.getElementById("talkInput");
+    input.value = "איך אומרים ";
+    input.focus();
+    // Put the caret at the end so she can type right after the prefix.
+    input.setSelectionRange(input.value.length, input.value.length);
+}
+
 // === Wiring ===
 
+document.getElementById("talkHelpBtn").addEventListener("click", talkHelp);
 document.getElementById("talkStartBtn").addEventListener("click", talkShowChat);
 document.getElementById("talkSendBtn").addEventListener("click", talkSend);
 document.getElementById("talkInput").addEventListener("keydown", function (e) {
