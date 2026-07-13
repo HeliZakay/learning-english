@@ -41,6 +41,7 @@ function talkSetVoiceState(next) {
     var mic = document.getElementById("talkMicBtn");
     var name = talkState.character ? talkState.character.name : "She";
     mic.disabled = (next === "thinking");
+    mic.classList.toggle("talk-mic-speaking", next === "speaking");
     if (next === "speaking") {
         pill.textContent = "🔊 " + name + " is speaking...";
         pill.className = "talk-voice-status";
@@ -269,6 +270,9 @@ function talkListening() {
 
 function talkListenStart() {
     if (talkListening() || talkState.sending || talkState.micDenied) return;
+    // Never open the mic while Samantha's audio plays — it would hear her.
+    // The only legal path from speaking to listening is talkInterrupt().
+    if (talkState.voiceState === "speaking") return;
     var rec = talkCreateRecognition();
     if (!rec) return;
     talkRec = rec;
@@ -365,12 +369,25 @@ function talkRemovePendingBubble() {
     if (el) el.parentNode.removeChild(el);
 }
 
-// Mic tap: start listening, or cancel if already listening.
+// Mic tap: interrupt Samantha if she's talking, cancel if already
+// listening, otherwise start listening.
 function talkMicTap() {
+    if (talkState.voiceState === "speaking") {
+        talkInterrupt();
+        return;
+    }
     if (talkListening()) {
         talkListenStop();
         return;
     }
+    talkListenStart();
+}
+
+// Politely cut Samantha off: stop her audio NOW, then open the mic. Both
+// steps are synchronous up to rec.start(), so no stale clip can slip in.
+function talkInterrupt() {
+    talkSpeakStop();
+    talkSetVoiceState("idle");
     talkListenStart();
 }
 

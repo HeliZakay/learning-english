@@ -323,6 +323,11 @@
     cursor: default;
 }
 
+/* While Samantha speaks the mic stays tappable — tapping interrupts her */
+.talk-mic-btn.talk-mic-speaking {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
+}
+
 .talk-mic-btn.talk-mic-listening {
     background: linear-gradient(135deg, #EF4444, #DC2626);
     animation: talk-mic-pulse 1.4s infinite;
