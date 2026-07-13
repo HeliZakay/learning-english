@@ -29,8 +29,34 @@ var talkState = {
     character: null,   // {name, greeting} from /ping
     history: [],       // [{role, content}] API-shaped turns; greeting NOT included
     sending: false,
-    started: false     // chat screen entered this session
+    started: false,    // chat screen entered this session
+    voiceState: "idle", // idle | thinking | speaking | listening
+    micDenied: false   // mic permission refused — stop auto-listening
 };
+
+// Single place that reflects the voice state in the UI (status pill, mic).
+function talkSetVoiceState(next) {
+    talkState.voiceState = next;
+    var pill = document.getElementById("talkVoiceStatus");
+    var mic = document.getElementById("talkMicBtn");
+    var name = talkState.character ? talkState.character.name : "She";
+    mic.disabled = (next === "thinking");
+    if (next === "speaking") {
+        pill.textContent = "🔊 " + name + " is speaking...";
+        pill.className = "talk-voice-status";
+        pill.style.display = "";
+    } else if (next === "listening") {
+        pill.textContent = "🎤 Listening... speak now";
+        pill.className = "talk-voice-status listening";
+        pill.style.display = "";
+    } else if (next === "thinking") {
+        pill.textContent = "💭 Thinking...";
+        pill.className = "talk-voice-status";
+        pill.style.display = "";
+    } else {
+        pill.style.display = "none";
+    }
+}
 
 // === Voice output (Samantha speaks) ===
 
@@ -49,7 +75,10 @@ function talkToggleMute() {
     var muted = !talkMuted();
     localStorage.setItem("talk_muted", muted ? "1" : "0");
     document.getElementById("talkMuteBtn").textContent = muted ? "🔇" : "🔊";
-    if (muted) talkSpeakStop();
+    if (muted) {
+        talkSpeakStop();
+        if (talkState.voiceState === "speaking") talkSetVoiceState("idle");
+    }
 }
 
 // One reused Audio element for all clips: after it is primed by a user
@@ -167,6 +196,7 @@ function talkPlayNext(gen) {
             return;
         }
         talkAudioEl.onended = function () {
+            talkAudioEl.onended = null;   // run once — guards double-ended quirks
             URL.revokeObjectURL(url);
             if (gen !== s.generation) return;
             s.index++;
@@ -175,6 +205,7 @@ function talkPlayNext(gen) {
         };
         talkAudioEl.src = url;
         s.playedAny = true;
+        talkSetVoiceState("speaking");
         talkAudioEl.play().catch(function () {
             URL.revokeObjectURL(url);
             if (gen === s.generation) talkOnCharacterDone(s.playedAny);
@@ -205,9 +236,17 @@ function talkSpeakStop() {
 }
 
 // Called once when Samantha finishes (or fails) speaking a reply.
-// playedAny = whether any audio actually reached the speaker.
-// Stage 16 hooks auto-listen here.
+// playedAny = whether any audio actually reached the speaker. If she truly
+// spoke, the mic opens automatically — that's the conversation loop. If the
+// turn was silent (muted / TTS failed), auto-listening would feel random.
 function talkOnCharacterDone(playedAny) {
+    var chatVisible = document.getElementById("talkChat").style.display !== "none";
+    if (playedAny && !talkMuted() && talkMicSupported() && !talkState.micDenied &&
+        chatVisible && !document.hidden) {
+        talkListenStart();
+        return;
+    }
+    talkSetVoiceState("idle");
 }
 
 // === Voice input (mom speaks) ===
@@ -242,6 +281,7 @@ function talkListenStart() {
 
     rec.onstart = function () {
         document.getElementById("talkMicBtn").classList.add("talk-mic-listening");
+        talkSetVoiceState("listening");
         talkShowPendingBubble();
     };
     rec.onresult = function (event) {
@@ -275,6 +315,7 @@ function talkListenStop() {
     try { rec.abort(); } catch (e) {}
     document.getElementById("talkMicBtn").classList.remove("talk-mic-listening");
     talkRemovePendingBubble();
+    talkSetVoiceState("idle");
 }
 
 // The single decision point: recognition ended (silence, error, or timeout).
@@ -291,6 +332,7 @@ function talkOnRecognitionEnd() {
         return;
     }
     talkRemovePendingBubble();
+    talkSetVoiceState("idle");
     talkOnListenFailed(talkListenState.errorCode);
 }
 
@@ -331,6 +373,18 @@ function talkMicTap() {
     }
     talkListenStart();
 }
+
+// Stop ALL voice activity (audio out + mic). Called when leaving Talk mode
+// (switchMode in index.html) and when the tab is hidden.
+function talkVoiceStop() {
+    talkSpeakStop();
+    talkListenStop();
+    talkSetVoiceState("idle");
+}
+
+document.addEventListener("visibilitychange", function () {
+    if (document.hidden) talkVoiceStop();
+});
 
 function talkWorkerUrl() {
     return localStorage.getItem("talk_worker_url") || TALK_WORKER_URL;
@@ -497,6 +551,7 @@ function talkSendText(text) {
     talkState.history.push({ role: "user", content: text });
     talkAppendBubble("user", text);
     talkHideStarters();
+    talkSetVoiceState("thinking");
     talkRequestReply();
 }
 
@@ -515,6 +570,7 @@ function talkRequestReply() {
             talkSpeak(data.reply);
         })
         .catch(function (err) {
+            talkSetVoiceState("idle");
             talkShowError(err && err.code);
         })
         .then(function () {

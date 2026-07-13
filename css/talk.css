@@ -128,6 +128,23 @@
     justify-content: center;
 }
 
+/* Voice state pill: speaking / listening / thinking */
+
+.talk-voice-status {
+    align-self: center;
+    margin: 4px 0;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 15px;
+    background: #E0E7FF;
+    color: #3730A3;
+}
+
+.talk-voice-status.listening {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
 .talk-messages {
     flex: 1;
     overflow-y: auto;

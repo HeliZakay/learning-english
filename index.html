@@ -1039,6 +1039,7 @@
                 <div class="talk-chat-name" id="talkCharName"></div>
                 <button class="talk-mute-btn" id="talkMuteBtn" aria-label="Sound on/off">🔊</button>
             </div>
+            <div class="talk-voice-status" id="talkVoiceStatus" style="display:none"></div>
             <div class="talk-messages" id="talkMessages"></div>
             <div class="talk-starters" id="talkStarters"></div>
             <div class="talk-composer">
@@ -2856,6 +2857,7 @@ Non-trivial words from the story, with their meaning **as they are used in the s
 
         function switchMode(mode) {
             ttsStop();
+            if (typeof talkVoiceStop === "function") talkVoiceStop();
             flashcardsTab.classList.remove("active");
             quizTab.classList.remove("active");
             flashcards2Tab.classList.remove("active");
