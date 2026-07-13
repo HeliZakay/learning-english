@@ -62,8 +62,29 @@ var TALK_SILENT_WAV = "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8
 
 var talkAudioState = {
     unlocked: false,
-    generation: 0      // bumped by talkSpeakStop(); stale callbacks compare & bail
+    generation: 0,     // bumped by talkSpeakStop(); stale callbacks compare & bail
+    queue: [],         // [{text, controller, promise (resolves to objectURL)}]
+    index: 0,          // next queue slot to play
+    fetched: 0,        // how many queue items have started fetching
+    playedAny: false   // did any clip actually reach the speaker this reply?
 };
+
+// Split a reply into speakable sentences, merging fragments under 25 chars
+// into a neighbor so "Oh!" doesn't become its own choppy clip.
+function talkSplitSentences(text) {
+    var raw = text.match(/[^.!?…]+[.!?…]+["'”’]?\s*|[^.!?…]+\s*$/g) || [text];
+    var merged = [];
+    for (var i = 0; i < raw.length; i++) {
+        var seg = raw[i].trim();
+        if (!seg) continue;
+        if (merged.length > 0 && (seg.length < 25 || merged[merged.length - 1].length < 25)) {
+            merged[merged.length - 1] += " " + seg;
+        } else {
+            merged.push(seg);
+        }
+    }
+    return merged;
+}
 
 function talkAudioUnlock() {
     if (talkAudioState.unlocked) return;
@@ -77,14 +98,15 @@ function talkAudioUnlock() {
 
 // POST /speak and resolve with an object URL for the MP3 (rejects on any
 // failure — callers degrade to text-only, never an error bubble).
-function talkFetchSpeech(text) {
+function talkFetchSpeech(text, controller) {
     return fetch(talkWorkerUrl().replace(/\/$/, "") + "/speak", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-Talk-Token": TALK_APP_TOKEN
         },
-        body: JSON.stringify({ text: text.slice(0, 1000), voice: talkVoice() })
+        body: JSON.stringify({ text: text.slice(0, 1000), voice: talkVoice() }),
+        signal: controller ? controller.signal : undefined
     }).then(function (res) {
         var type = res.headers.get("Content-Type") || "";
         if (!res.ok || type.indexOf("audio/") !== 0) throw new Error("speech unavailable");
@@ -94,8 +116,10 @@ function talkFetchSpeech(text) {
     });
 }
 
-// Speak a character reply aloud. The text bubble is already on screen; any
-// failure here is silent. Calls talkOnCharacterDone(playedAny) at the end.
+// Speak a character reply aloud, sentence by sentence: clip 2 downloads
+// while clip 1 plays, so Samantha starts talking quickly. The text bubble is
+// already on screen; any failure is silent. Calls
+// talkOnCharacterDone(playedAny) when the last clip ends (or on failure).
 function talkSpeak(reply) {
     talkSpeakStop();
     if (talkMuted() || !talkAudioState.unlocked) {
@@ -103,32 +127,78 @@ function talkSpeak(reply) {
         return;
     }
     var gen = talkAudioState.generation;
+    talkAudioState.queue = talkSplitSentences(reply).map(function (text) {
+        return { text: text, controller: null, promise: null };
+    });
+    talkAudioState.index = 0;
+    talkAudioState.fetched = 0;
+    talkAudioState.playedAny = false;
 
-    talkFetchSpeech(reply)
-        .then(function (url) {
-            if (gen !== talkAudioState.generation) {
-                URL.revokeObjectURL(url);
-                return;
-            }
-            talkAudioEl.onended = function () {
-                URL.revokeObjectURL(url);
-                if (gen !== talkAudioState.generation) return;
-                talkOnCharacterDone(true);
-            };
-            talkAudioEl.src = url;
-            talkAudioEl.play().catch(function () {
-                URL.revokeObjectURL(url);
-                if (gen === talkAudioState.generation) talkOnCharacterDone(false);
-            });
-        })
-        .catch(function () {
-            if (gen === talkAudioState.generation) talkOnCharacterDone(false);
-        });
+    talkPrefetch(gen);
+    talkPlayNext(gen);
 }
 
-// Stop all voice output now. Synchronous; invalidates every pending callback.
+// Keep at most 2 clip downloads in flight, always for the earliest
+// not-yet-fetched sentences.
+function talkPrefetch(gen) {
+    var s = talkAudioState;
+    if (gen !== s.generation) return;
+    while (s.fetched < s.queue.length && s.fetched - s.index < 2) {
+        (function (item) {
+            item.controller = new AbortController();
+            item.promise = talkFetchSpeech(item.text, item.controller);
+            item.promise.then(function () { talkPrefetch(gen); }, function () {});
+        })(s.queue[s.fetched]);
+        s.fetched++;
+    }
+}
+
+function talkPlayNext(gen) {
+    var s = talkAudioState;
+    if (gen !== s.generation) return;
+    if (s.index >= s.queue.length) {
+        talkOnCharacterDone(s.playedAny);
+        return;
+    }
+    var item = s.queue[s.index];
+    item.promise.then(function (url) {
+        if (gen !== s.generation) {
+            URL.revokeObjectURL(url);
+            return;
+        }
+        talkAudioEl.onended = function () {
+            URL.revokeObjectURL(url);
+            if (gen !== s.generation) return;
+            s.index++;
+            talkPrefetch(gen);
+            talkPlayNext(gen);
+        };
+        talkAudioEl.src = url;
+        s.playedAny = true;
+        talkAudioEl.play().catch(function () {
+            URL.revokeObjectURL(url);
+            if (gen === s.generation) talkOnCharacterDone(s.playedAny);
+        });
+    }, function () {
+        // One sentence failed: stop the voice attempt for this reply quietly.
+        if (gen === s.generation) talkOnCharacterDone(s.playedAny);
+    });
+}
+
+// Stop all voice output now. Synchronous; invalidates every pending callback
+// and aborts in-flight clip downloads.
 function talkSpeakStop() {
     talkAudioState.generation++;
+    talkAudioState.queue.forEach(function (item) {
+        if (item.controller) item.controller.abort();
+        // Revoke clips that finished downloading but never played.
+        if (item.promise) {
+            item.promise.then(function (url) { URL.revokeObjectURL(url); }, function () {});
+        }
+    });
+    talkAudioState.queue = [];
+    talkAudioState.index = 0;
+    talkAudioState.fetched = 0;
     talkAudioEl.onended = null;
     talkAudioEl.pause();
     talkAudioEl.removeAttribute("src");

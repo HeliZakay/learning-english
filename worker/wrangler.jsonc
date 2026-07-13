@@ -9,6 +9,6 @@
   // set with `npx wrangler secret put`, never in this file.
   "vars": {
     "TALK_APP_TOKEN": "talk-GAcDReX5Mh5WXlfT",
-    "TALK_DAILY_LIMIT": "300"
+    "TALK_DAILY_LIMIT": "600"
   }
 }
