@@ -1020,13 +1020,34 @@
         </div>
     </div>
 
-    <!-- Talk — conversation with a character (feature under construction) -->
+    <!-- Talk — conversation with a character -->
     <div class="talk-container" id="talkContainer">
-        <div class="talk-card">
+        <!-- Intro screen: connection check + entry point. The Start button
+             click is also the user gesture that will unlock audio playback
+             (Chrome autoplay policy) when voice arrives — keep it. -->
+        <div class="talk-card" id="talkIntro">
             <div class="talk-avatar-placeholder">💬</div>
-            <div class="talk-title">Talk</div>
-            <div class="talk-subtitle">A friend to talk with is coming soon...</div>
+            <div class="talk-title" id="talkIntroName">Talk</div>
+            <div class="talk-subtitle" id="talkIntroSubtitle">A friend to talk with</div>
             <div class="talk-status" id="talkStatus"></div>
+            <button class="talk-start-btn" id="talkStartBtn" style="display:none">Start chatting</button>
+        </div>
+        <!-- Chat screen -->
+        <div class="talk-chat" id="talkChat" style="display:none">
+            <div class="talk-chat-header">
+                <div class="talk-chat-avatar">💬</div>
+                <div class="talk-chat-name" id="talkCharName"></div>
+            </div>
+            <div class="talk-messages" id="talkMessages"></div>
+            <div class="talk-starters" id="talkStarters"></div>
+            <!-- Composer: the mic button (voice stage) slots in between the
+                 input and the send button. -->
+            <div class="talk-composer">
+                <button class="talk-help-btn" id="talkHelpBtn" title="How do I say...?">?</button>
+                <input class="talk-input" id="talkInput" type="text" autocomplete="off"
+                       placeholder="Write in English...">
+                <button class="talk-send-btn" id="talkSendBtn" aria-label="Send">➤</button>
+            </div>
         </div>
     </div>
 

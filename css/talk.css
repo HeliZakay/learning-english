@@ -6,6 +6,8 @@
     max-width: 400px;
 }
 
+/* === Intro screen === */
+
 .talk-card {
     background: #FFFFFF;
     border-radius: 24px;
@@ -57,4 +59,214 @@
 .talk-status.error {
     background: #FEE2E2;
     color: #991B1B;
+}
+
+.talk-start-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.talk-start-btn:active {
+    background: linear-gradient(135deg, #4F46E5, #4338CA);
+}
+
+/* === Chat screen === */
+
+.talk-chat {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    height: calc(100vh - 140px);
+    height: calc(100dvh - 140px);
+}
+
+.talk-chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+}
+
+.talk-chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.talk-chat-name {
+    font-size: 19px;
+    font-weight: 700;
+    color: #3730A3;
+}
+
+.talk-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.talk-bubble {
+    max-width: 80%;
+    padding: 12px 16px;
+    font-size: 17px;
+    line-height: 1.45;
+}
+
+.talk-bubble-character {
+    background: #FFFFFF;
+    color: #4B5563;
+    border-radius: 18px 18px 18px 4px;
+    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.10);
+    align-self: flex-start;
+}
+
+.talk-bubble-user {
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    color: #FFFFFF;
+    border-radius: 18px 18px 4px 18px;
+    align-self: flex-end;
+}
+
+.talk-bubble-error {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-radius: 18px;
+    align-self: center;
+    text-align: center;
+    max-width: 90%;
+}
+
+.talk-retry-btn {
+    display: block;
+    margin: 10px auto 0;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 999px;
+    background: #DC2626;
+    color: #FFFFFF;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Typing indicator: three blinking dots in a character bubble */
+
+.talk-typing {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 16px;
+}
+
+.talk-typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6366F1;
+    animation: talk-blink 1.2s infinite;
+}
+
+.talk-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.talk-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes talk-blink {
+    0%, 60%, 100% { opacity: 0.25; }
+    30% { opacity: 1; }
+}
+
+/* === Topic starter chips === */
+
+.talk-starters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.talk-starter-chip {
+    border: none;
+    background: #E0E7FF;
+    color: #3730A3;
+    border-radius: 999px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.talk-starter-chip:active {
+    background: #C7D2FE;
+}
+
+/* === Composer === */
+
+.talk-composer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.talk-input {
+    flex: 1;
+    min-width: 0;
+    border: 2px solid #C7D2FE;
+    border-radius: 999px;
+    padding: 12px 16px;
+    font-size: 17px;
+    color: #4B5563;
+    outline: none;
+    background: #FFFFFF;
+}
+
+.talk-input:focus {
+    border-color: #6366F1;
+}
+
+.talk-send-btn,
+.talk-help-btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.talk-send-btn {
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    color: #FFFFFF;
+}
+
+.talk-send-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.talk-help-btn {
+    background: #E0E7FF;
+    color: #3730A3;
+    font-weight: 700;
 }
