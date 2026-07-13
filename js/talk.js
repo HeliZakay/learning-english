@@ -241,13 +241,13 @@ function talkSpeakStop() {
 // spoke, the mic opens automatically — that's the conversation loop. If the
 // turn was silent (muted / TTS failed), auto-listening would feel random.
 function talkOnCharacterDone(playedAny) {
+    // Leave "speaking" first — talkListenStart refuses while speaking.
+    talkSetVoiceState("idle");
     var chatVisible = document.getElementById("talkChat").style.display !== "none";
     if (playedAny && !talkMuted() && talkMicSupported() && !talkState.micDenied &&
         chatVisible && !document.hidden) {
         talkListenStart();
-        return;
     }
-    talkSetVoiceState("idle");
 }
 
 // === Voice input (mom speaks) ===
@@ -340,8 +340,37 @@ function talkOnRecognitionEnd() {
     talkOnListenFailed(talkListenState.errorCode);
 }
 
-// No usable speech. Stage 18 turns this into friendly recovery messages.
+// No usable speech — explain kindly and leave mom in control.
 function talkOnListenFailed(errorCode) {
+    if (errorCode === "aborted" || !errorCode) return;  // cancelled on purpose / clean silence
+    if (errorCode === "not-allowed" || errorCode === "service-not-allowed") {
+        talkState.micDenied = true;
+        document.getElementById("talkMicBtn").classList.add("talk-mic-denied");
+        talkShowHint("Samantha can't hear you — the microphone is blocked. " +
+            "Tap the 🔒 next to the address to allow it. You can always type instead!");
+        return;
+    }
+    if (errorCode === "no-speech") {
+        talkShowHint("I didn't hear you — tap the microphone 🎤 and try again.");
+        return;
+    }
+    if (errorCode === "network") {
+        talkShowHint("No connection for listening. Check the internet and try again.");
+        return;
+    }
+    if (errorCode === "audio-capture") {
+        talkShowHint("No microphone was found on this device. You can type instead!");
+        return;
+    }
+    talkShowHint("Something went wrong with listening — tap the microphone 🎤 to try again.");
+}
+
+// A gentle in-chat hint (soft indigo, not the red error style). Only one
+// hint at a time — a new one replaces the old.
+function talkShowHint(text) {
+    var old = document.querySelector(".talk-bubble-hint");
+    if (old) old.parentNode.removeChild(old);
+    talkAppendBubble("hint", text);
 }
 
 // Live transcript shown as a pending user bubble (not the input — keeps the
@@ -372,6 +401,11 @@ function talkRemovePendingBubble() {
 // Mic tap: interrupt Samantha if she's talking, cancel if already
 // listening, otherwise start listening.
 function talkMicTap() {
+    if (talkState.micDenied) {
+        talkShowHint("The microphone is still blocked. Tap the 🔒 next to the " +
+            "address, allow the microphone, and reload the page.");
+        return;
+    }
     if (talkState.voiceState === "speaking") {
         talkInterrupt();
         return;
