@@ -246,7 +246,7 @@ function talkShowError(code) {
 // === Hebrew help ===
 
 // "How do I say...?" — prefills the input with Hebrew so mom completes the
-// phrase and sends normally; Dalia answers with the English and carries on.
+// phrase and sends normally; Samantha answers with the English and carries on.
 function talkHelp() {
     var input = document.getElementById("talkInput");
     input.value = "איך אומרים ";
