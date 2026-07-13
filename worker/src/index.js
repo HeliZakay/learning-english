@@ -7,7 +7,10 @@
 import { buildSystemPrompt, mockReply } from "./persona.js";
 
 const ANTHROPIC_MODEL = "claude-sonnet-5";
+const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
+const DEFAULT_VOICE = "nova";
 const MAX_HISTORY = 30;
+const MAX_SPEAK_CHARS = 1000;
 const UPSTREAM_TIMEOUT_MS = 30000;
 
 // Open CORS until Stage 5 hardening — the worker holds no secrets yet.
@@ -113,6 +116,51 @@ async function handleChat(request, env) {
     return json({ ok: true, reply: textBlock.text, mock: false, usage: data.usage });
 }
 
+async function handleSpeak(request, env) {
+    let body;
+    try {
+        body = await request.json();
+    } catch {
+        return fail("bad_request", "Body must be JSON", 400);
+    }
+    if (typeof body.text !== "string" || body.text.length === 0 || body.text.length > MAX_SPEAK_CHARS) {
+        return fail("bad_request", "text must be a string of 1-" + MAX_SPEAK_CHARS + " chars", 400);
+    }
+
+    if (!env.OPENAI_API_KEY) {
+        return fail("tts_not_configured", "OPENAI_API_KEY is not set", 503);
+    }
+
+    let res;
+    try {
+        res = await fetchWithTimeout("https://api.openai.com/v1/audio/speech", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + env.OPENAI_API_KEY,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                model: OPENAI_TTS_MODEL,
+                voice: typeof body.voice === "string" && body.voice ? body.voice : DEFAULT_VOICE,
+                input: body.text,
+                response_format: "mp3",
+            }),
+        });
+    } catch (err) {
+        if (err && err.name === "AbortError") {
+            return fail("timeout", "The speech service took too long", 504);
+        }
+        return fail("upstream_error", "Could not reach the speech service", 502);
+    }
+
+    if (!res.ok) return upstreamFail(res.status);
+
+    return new Response(res.body, {
+        status: 200,
+        headers: { "Content-Type": "audio/mpeg", ...CORS_HEADERS },
+    });
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -127,6 +175,10 @@ export default {
 
         if (url.pathname === "/chat" && request.method === "POST") {
             return handleChat(request, env);
+        }
+
+        if (url.pathname === "/speak" && request.method === "POST") {
+            return handleSpeak(request, env);
         }
 
         return fail("not_found", "Not found", 404);
