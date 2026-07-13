@@ -114,6 +114,20 @@
     color: #3730A3;
 }
 
+.talk-mute-btn {
+    margin-left: auto;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: #E0E7FF;
+    font-size: 17px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .talk-messages {
     flex: 1;
     overflow-y: auto;

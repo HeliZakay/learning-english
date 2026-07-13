@@ -32,6 +32,114 @@ var talkState = {
     started: false     // chat screen entered this session
 };
 
+// === Voice output (Samantha speaks) ===
+
+// Samantha's TTS voice; the default is set after the voice-tasting session.
+var TALK_DEFAULT_VOICE = "nova";
+
+function talkVoice() {
+    return localStorage.getItem("talk_voice") || TALK_DEFAULT_VOICE;
+}
+
+function talkMuted() {
+    return localStorage.getItem("talk_muted") === "1";
+}
+
+function talkToggleMute() {
+    var muted = !talkMuted();
+    localStorage.setItem("talk_muted", muted ? "1" : "0");
+    document.getElementById("talkMuteBtn").textContent = muted ? "🔇" : "🔊";
+    if (muted) talkSpeakStop();
+}
+
+// One reused Audio element for all clips: after it is primed by a user
+// gesture, later .play() calls stay allowed. A fresh Audio per clip can hit
+// NotAllowedError on Android.
+var talkAudioEl = new Audio();
+
+// 0.05s of silence, used only to prime talkAudioEl inside the Start click.
+var TALK_SILENT_WAV = "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA";
+
+var talkAudioState = {
+    unlocked: false,
+    generation: 0      // bumped by talkSpeakStop(); stale callbacks compare & bail
+};
+
+function talkAudioUnlock() {
+    if (talkAudioState.unlocked) return;
+    talkAudioState.unlocked = true;
+    talkAudioEl.src = TALK_SILENT_WAV;
+    var p = talkAudioEl.play();
+    if (p && p.then) {
+        p.then(function () { talkAudioEl.pause(); }).catch(function () {});
+    }
+}
+
+// POST /speak and resolve with an object URL for the MP3 (rejects on any
+// failure — callers degrade to text-only, never an error bubble).
+function talkFetchSpeech(text) {
+    return fetch(talkWorkerUrl().replace(/\/$/, "") + "/speak", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Talk-Token": TALK_APP_TOKEN
+        },
+        body: JSON.stringify({ text: text.slice(0, 1000), voice: talkVoice() })
+    }).then(function (res) {
+        var type = res.headers.get("Content-Type") || "";
+        if (!res.ok || type.indexOf("audio/") !== 0) throw new Error("speech unavailable");
+        return res.blob();
+    }).then(function (blob) {
+        return URL.createObjectURL(blob);
+    });
+}
+
+// Speak a character reply aloud. The text bubble is already on screen; any
+// failure here is silent. Calls talkOnCharacterDone(playedAny) at the end.
+function talkSpeak(reply) {
+    talkSpeakStop();
+    if (talkMuted() || !talkAudioState.unlocked) {
+        talkOnCharacterDone(false);
+        return;
+    }
+    var gen = talkAudioState.generation;
+
+    talkFetchSpeech(reply)
+        .then(function (url) {
+            if (gen !== talkAudioState.generation) {
+                URL.revokeObjectURL(url);
+                return;
+            }
+            talkAudioEl.onended = function () {
+                URL.revokeObjectURL(url);
+                if (gen !== talkAudioState.generation) return;
+                talkOnCharacterDone(true);
+            };
+            talkAudioEl.src = url;
+            talkAudioEl.play().catch(function () {
+                URL.revokeObjectURL(url);
+                if (gen === talkAudioState.generation) talkOnCharacterDone(false);
+            });
+        })
+        .catch(function () {
+            if (gen === talkAudioState.generation) talkOnCharacterDone(false);
+        });
+}
+
+// Stop all voice output now. Synchronous; invalidates every pending callback.
+function talkSpeakStop() {
+    talkAudioState.generation++;
+    talkAudioEl.onended = null;
+    talkAudioEl.pause();
+    talkAudioEl.removeAttribute("src");
+}
+
+// Called once when Samantha finishes (or fails) speaking a reply.
+// playedAny = whether any audio actually reached the speaker.
+// Stage 16 hooks auto-listen here.
+function talkOnCharacterDone(playedAny) {
+}
+
 function talkWorkerUrl() {
     return localStorage.getItem("talk_worker_url") || TALK_WORKER_URL;
 }
@@ -203,6 +311,7 @@ function talkRequestReply() {
         .then(function (data) {
             talkState.history.push({ role: "assistant", content: data.reply });
             talkAppendBubble("character", data.reply);
+            talkSpeak(data.reply);
         })
         .catch(function (err) {
             talkShowError(err && err.code);
@@ -258,7 +367,12 @@ function talkHelp() {
 // === Wiring ===
 
 document.getElementById("talkHelpBtn").addEventListener("click", talkHelp);
-document.getElementById("talkStartBtn").addEventListener("click", talkShowChat);
+document.getElementById("talkStartBtn").addEventListener("click", function () {
+    talkAudioUnlock();  // user gesture — primes audio for later playback
+    talkShowChat();
+});
+document.getElementById("talkMuteBtn").addEventListener("click", talkToggleMute);
+document.getElementById("talkMuteBtn").textContent = talkMuted() ? "🔇" : "🔊";
 document.getElementById("talkSendBtn").addEventListener("click", talkSend);
 document.getElementById("talkInput").addEventListener("keydown", function (e) {
     if (e.key === "Enter") talkSend();
