@@ -14,6 +14,17 @@ var TALK_WORKER_URL = "";
 // public file — just a tripwire against strangers using the worker.
 var TALK_APP_TOKEN = "talk-GAcDReX5Mh5WXlfT";
 
+// Tappable conversation openers, shown while the conversation is empty.
+// Tapping one sends its message as a normal visible user message — which
+// also models a correct English phrase.
+var TALK_STARTERS = [
+    { label: "👨‍👩‍👧 My family", message: "Let's talk about my family." },
+    { label: "🍲 Food", message: "Let's talk about food!" },
+    { label: "☀️ My day", message: "Let me tell you about my day." },
+    { label: "🌤 The weather", message: "Let's talk about the weather." },
+    { label: "📸 Old memories", message: "Let's talk about old memories." }
+];
+
 var talkState = {
     character: null,   // {name, greeting} from /ping
     history: [],       // [{role, content}] API-shaped turns; greeting NOT included
@@ -108,8 +119,31 @@ function talkShowChat() {
             "Hello! It's so nice to meet you! How are you today?";
         document.getElementById("talkCharName").textContent = name;
         talkAppendBubble("character", greeting);
+        talkRenderStarters();
     }
     document.getElementById("talkInput").focus();
+}
+
+// === Topic starter chips ===
+
+function talkRenderStarters() {
+    var box = document.getElementById("talkStarters");
+    box.innerHTML = "";
+    TALK_STARTERS.forEach(function (starter) {
+        var chip = document.createElement("button");
+        chip.className = "talk-starter-chip";
+        chip.textContent = starter.label;
+        chip.addEventListener("click", function () {
+            var input = document.getElementById("talkInput");
+            input.value = starter.message;
+            talkSend();
+        });
+        box.appendChild(chip);
+    });
+}
+
+function talkHideStarters() {
+    document.getElementById("talkStarters").innerHTML = "";
 }
 
 // === Messages ===
@@ -153,6 +187,7 @@ function talkSend() {
 
     talkState.history.push({ role: "user", content: text });
     talkAppendBubble("user", text);
+    talkHideStarters();
     talkRequestReply();
 }
 
