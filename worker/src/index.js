@@ -4,7 +4,7 @@
 // daily cap. Mock mode: with no API keys configured, /chat returns
 // deterministic in-character replies so the app is fully testable locally.
 
-import { buildSystemPrompt, mockReply } from "./persona.js";
+import { CHARACTER, buildSystemPrompt, mockReply } from "./persona.js";
 
 const ANTHROPIC_MODEL = "claude-sonnet-5";
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
@@ -194,7 +194,11 @@ export default {
         }
 
         if (url.pathname === "/ping") {
-            return json({ ok: true, message: "Hello from the Talk worker!" }, 200, cors);
+            return json({
+                ok: true,
+                mock: !env.ANTHROPIC_API_KEY,
+                character: { name: CHARACTER.name, greeting: CHARACTER.greeting },
+            }, 200, cors);
         }
 
         if ((url.pathname === "/chat" || url.pathname === "/speak") && request.method === "POST") {

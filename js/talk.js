@@ -54,6 +54,12 @@ function startTalk() {
         .then(function (res) { return res.json(); })
         .then(function (data) {
             if (data && data.ok) {
+                talkState.character = data.character || null;
+                if (data.character) {
+                    document.getElementById("talkIntroName").textContent = data.character.name;
+                    document.getElementById("talkIntroSubtitle").textContent =
+                        data.character.name + " is here and would love to talk with you!";
+                }
                 setTalkStatus("Server: connected ✓", "connected");
                 startBtn.style.display = "";
             } else {
@@ -63,6 +69,26 @@ function startTalk() {
         .catch(function () {
             setTalkStatus("Server: could not connect", "error");
         });
+}
+
+// Shared POST helper for worker endpoints. Resolves with the parsed body on
+// success; rejects with {code} on any failure so callers can map messages.
+function talkFetch(path, body) {
+    return fetch(talkWorkerUrl().replace(/\/$/, "") + path, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Talk-Token": TALK_APP_TOKEN
+        },
+        body: JSON.stringify(body)
+    }).then(function (res) {
+        return res.json().then(function (data) {
+            if (data && data.ok) return data;
+            throw { code: (data && data.error && data.error.code) || "upstream_error" };
+        });
+    }, function () {
+        throw { code: "network" };
+    });
 }
 
 // === Sub-view toggling (same pattern as story mode) ===
@@ -135,16 +161,22 @@ function talkRequestReply() {
     document.getElementById("talkSendBtn").disabled = true;
     talkShowTyping();
 
-    // Stage 6 placeholder: a local fake reply. Stage 7 replaces this with a
-    // real /chat request.
-    setTimeout(function () {
-        var reply = "You said: \"" + talkState.history[talkState.history.length - 1].content + "\". (I will really talk soon!)";
-        talkState.history.push({ role: "assistant", content: reply });
-        talkHideTyping();
-        talkAppendBubble("character", reply);
-        talkState.sending = false;
-        document.getElementById("talkSendBtn").disabled = false;
-    }, 600);
+    // Mirror of the worker's history cap, to keep payloads small.
+    var history = talkState.history.slice(-30);
+
+    talkFetch("/chat", { messages: history })
+        .then(function (data) {
+            talkState.history.push({ role: "assistant", content: data.reply });
+            talkAppendBubble("character", data.reply);
+        })
+        .catch(function (err) {
+            talkAppendBubble("error", "Something went wrong. Please try again.");
+        })
+        .then(function () {
+            talkHideTyping();
+            talkState.sending = false;
+            document.getElementById("talkSendBtn").disabled = false;
+        });
 }
 
 // === Wiring ===
