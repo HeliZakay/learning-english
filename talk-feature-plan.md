@@ -46,12 +46,12 @@ Each stage is small, ends in something testable, and gets its own commit.
 - [x] **12. Error handling** — network failures, retries, kind in-conversation error messages.
 
 ### Phase C — Voice (13–18)
-- [ ] **13. Character speaks** — each character message plays via `/speak` while text shows; pick her voice together.
-- [ ] **14. Fast speech** — sentence-by-sentence TTS pipelining so she starts talking quickly.
-- [ ] **15. Mom speaks** — tap-to-talk button with live transcript shown as she talks.
-- [ ] **16. Auto-listen** — mic opens automatically after the character finishes; silence ends the turn; clear listening/thinking/speaking visuals.
-- [ ] **17. No self-hearing** — mic paused while the character speaks; allow tapping to interrupt her.
-- [ ] **18. Voice UX polish** — big button states, animations, "I didn't hear you" recovery.
+- [x] **13. Character speaks** — each character message plays via `/speak` while text shows; pick her voice together.
+- [x] **14. Fast speech** — sentence-by-sentence TTS pipelining so she starts talking quickly.
+- [x] **15. Mom speaks** — tap-to-talk button with live transcript shown as she talks.
+- [x] **16. Auto-listen** — mic opens automatically after the character finishes; silence ends the turn; clear listening/thinking/speaking visuals.
+- [x] **17. No self-hearing** — mic paused while the character speaks; allow tapping to interrupt her.
+- [x] **18. Voice UX polish** — big button states, animations, "I didn't hear you" recovery. *(code verified headlessly; real-phone checklist pending)*
 
 ### Phase D — Memory (19–22)
 - [ ] **19. Transcripts** — save conversation history locally.
