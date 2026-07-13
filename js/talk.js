@@ -210,6 +210,128 @@ function talkSpeakStop() {
 function talkOnCharacterDone(playedAny) {
 }
 
+// === Voice input (mom speaks) ===
+
+function talkMicSupported() {
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+function talkCreateRecognition() {
+    var Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    return Ctor ? new Ctor() : null;
+}
+
+var talkRec = null;              // active recognition instance, null when idle
+var talkListenState = { finalText: "", interimText: "", errorCode: null };
+
+function talkListening() {
+    return talkRec !== null;
+}
+
+function talkListenStart() {
+    if (talkListening() || talkState.sending || talkState.micDenied) return;
+    var rec = talkCreateRecognition();
+    if (!rec) return;
+    talkRec = rec;
+    talkListenState = { finalText: "", interimText: "", errorCode: null };
+
+    rec.continuous = false;       // Chrome ends on silence — that IS our turn-end
+    rec.interimResults = true;
+    rec.lang = "en-US";
+    rec.maxAlternatives = 1;
+
+    rec.onstart = function () {
+        document.getElementById("talkMicBtn").classList.add("talk-mic-listening");
+        talkShowPendingBubble();
+    };
+    rec.onresult = function (event) {
+        var finals = "", interims = "";
+        for (var i = 0; i < event.results.length; i++) {
+            var t = event.results[i][0].transcript;
+            if (event.results[i].isFinal) finals += t;
+            else interims += t;
+        }
+        talkListenState.finalText = finals;
+        talkListenState.interimText = interims;
+        talkUpdatePendingBubble((finals + " " + interims).trim() || "...");
+    };
+    rec.onerror = function (event) {
+        talkListenState.errorCode = event.error;
+    };
+    rec.onend = function () {
+        talkOnRecognitionEnd();
+    };
+    rec.start();
+}
+
+// Cancel listening without sending anything.
+function talkListenStop() {
+    if (!talkRec) return;
+    var rec = talkRec;
+    talkRec = null;               // onend sees no active rec → pure cleanup
+    rec.onend = null;
+    rec.onresult = null;
+    rec.onerror = null;
+    try { rec.abort(); } catch (e) {}
+    document.getElementById("talkMicBtn").classList.remove("talk-mic-listening");
+    talkRemovePendingBubble();
+}
+
+// The single decision point: recognition ended (silence, error, or timeout).
+function talkOnRecognitionEnd() {
+    if (!talkRec) return;         // already cancelled via talkListenStop
+    talkRec = null;
+    document.getElementById("talkMicBtn").classList.remove("talk-mic-listening");
+
+    // Android sometimes never marks results final — promote the interim.
+    var text = talkListenState.finalText.trim() || talkListenState.interimText.trim();
+    if (text) {
+        talkRemovePendingBubble();
+        talkSendText(text);       // auto-send: she talks, it sends
+        return;
+    }
+    talkRemovePendingBubble();
+    talkOnListenFailed(talkListenState.errorCode);
+}
+
+// No usable speech. Stage 18 turns this into friendly recovery messages.
+function talkOnListenFailed(errorCode) {
+}
+
+// Live transcript shown as a pending user bubble (not the input — keeps the
+// Android keyboard out of the voice flow).
+function talkShowPendingBubble() {
+    talkRemovePendingBubble();
+    var el = document.createElement("div");
+    el.className = "talk-bubble talk-bubble-user talk-bubble-interim";
+    el.id = "talkPendingBubble";
+    el.textContent = "...";
+    document.getElementById("talkMessages").appendChild(el);
+    talkScrollDown();
+}
+
+function talkUpdatePendingBubble(text) {
+    var el = document.getElementById("talkPendingBubble");
+    if (el) {
+        el.textContent = text;
+        talkScrollDown();
+    }
+}
+
+function talkRemovePendingBubble() {
+    var el = document.getElementById("talkPendingBubble");
+    if (el) el.parentNode.removeChild(el);
+}
+
+// Mic tap: start listening, or cancel if already listening.
+function talkMicTap() {
+    if (talkListening()) {
+        talkListenStop();
+        return;
+    }
+    talkListenStart();
+}
+
 function talkWorkerUrl() {
     return localStorage.getItem("talk_worker_url") || TALK_WORKER_URL;
 }
@@ -299,7 +421,10 @@ function talkShowChat() {
         talkAppendBubble("character", greeting);
         talkRenderStarters();
     }
-    document.getElementById("talkInput").focus();
+    // Focusing the input pops the Android keyboard — skip it in voice mode.
+    if (!talkMicSupported() || talkMuted()) {
+        document.getElementById("talkInput").focus();
+    }
 }
 
 // === Topic starter chips ===
@@ -361,8 +486,14 @@ function talkSend() {
     var input = document.getElementById("talkInput");
     var text = input.value.trim();
     if (!text || talkState.sending) return;
+    if (talkListening()) talkListenStop();  // typing wins over the mic
     input.value = "";
+    talkSendText(text);
+}
 
+// Shared send tail for both the typed path and the voice transcript path.
+function talkSendText(text) {
+    if (talkState.sending) return;
     talkState.history.push({ role: "user", content: text });
     talkAppendBubble("user", text);
     talkHideStarters();
@@ -443,6 +574,10 @@ document.getElementById("talkStartBtn").addEventListener("click", function () {
 });
 document.getElementById("talkMuteBtn").addEventListener("click", talkToggleMute);
 document.getElementById("talkMuteBtn").textContent = talkMuted() ? "🔇" : "🔊";
+document.getElementById("talkMicBtn").addEventListener("click", talkMicTap);
+if (!talkMicSupported()) {
+    document.getElementById("talkMicBtn").style.display = "none";
+}
 document.getElementById("talkSendBtn").addEventListener("click", talkSend);
 document.getElementById("talkInput").addEventListener("keydown", function (e) {
     if (e.key === "Enter") talkSend();

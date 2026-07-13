@@ -284,3 +284,47 @@
     color: #3730A3;
     font-weight: 700;
 }
+
+/* Mic button — the primary voice control, larger than send/help */
+
+.talk-mic-btn {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.talk-mic-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.talk-mic-btn.talk-mic-listening {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    animation: talk-mic-pulse 1.4s infinite;
+}
+
+@keyframes talk-mic-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+    70% { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+/* Live transcript bubble while she speaks */
+
+.talk-bubble-interim {
+    opacity: 0.65;
+    animation: talk-interim-pulse 1.6s infinite;
+}
+
+@keyframes talk-interim-pulse {
+    0%, 100% { opacity: 0.65; }
+    50% { opacity: 0.85; }
+}
