@@ -427,7 +427,8 @@ function talkListenStop() {
     talkSetVoiceState("idle");
 }
 
-// Turn the recorded audio into text and send it to Samantha.
+// Turn the recorded audio into text. Voice mode pauses on the review card;
+// muted text mode drops the transcript into the composer for mom to edit.
 function talkTranscribeAndSend(blob) {
     if (blob.size < 2000) {   // essentially nothing was recorded
         talkSetVoiceState("idle");
@@ -455,8 +456,7 @@ function talkTranscribeAndSend(blob) {
         if (talkVoiceMode()) {
             talkShowReview(text);   // pause: let mom approve before sending
         } else {
-            talkShowHeard(text);
-            talkSendText(text);     // muted/text mode: send straight away
+            talkFillComposer(text); // muted/text mode: let mom edit, then ➤
         }
     }).catch(function (err) {
         talkSetVoiceState("idle");
@@ -488,6 +488,16 @@ function talkReviewSend() {
     if (!text) return;
     talkShowHeard(text);   // keep "You said…" visible while she thinks/answers
     talkSendText(text);
+}
+
+// Muted text mode: the transcript lands in the text box instead of sending —
+// mom reads it, fixes any word, taps ➤ herself (or 🎤 again to replace it).
+function talkFillComposer(text) {
+    talkSetVoiceState("idle");   // re-enable the mic, hide the thinking pill
+    var input = document.getElementById("talkInput");
+    input.value = text;          // a re-record replaces the previous attempt
+    input.focus();
+    input.setSelectionRange(text.length, text.length);
 }
 
 function talkReviewAgain() {
