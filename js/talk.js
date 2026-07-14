@@ -858,7 +858,13 @@ function startTalk() {
                 }
                 if (!talkState.started) talkPrepareGreeting();
                 setTalkStatus("Server: connected ✓", "connected");
-                startBtn.style.display = "";
+                // First visit ever: explain in Hebrew instead of the Start button.
+                if (localStorage.getItem("talk_onboarded") !== "1") {
+                    document.getElementById("talkIntroSubtitle").style.display = "none";
+                    document.getElementById("talkOnboarding").style.display = "";
+                } else {
+                    startBtn.style.display = "";
+                }
             } else {
                 setTalkStatus("Server: unexpected reply", "error");
             }
@@ -1108,6 +1114,13 @@ function talkHelp() {
 document.getElementById("talkHelpBtn").addEventListener("click", talkHelp);
 document.getElementById("talkStartBtn").addEventListener("click", function () {
     talkAudioUnlock();  // user gesture — primes audio for later playback
+    talkShowChat();
+});
+document.getElementById("talkOnboardBtn").addEventListener("click", function () {
+    localStorage.setItem("talk_onboarded", "1");
+    document.getElementById("talkOnboarding").style.display = "none";
+    document.getElementById("talkIntroSubtitle").style.display = "";
+    talkAudioUnlock();  // this tap is the first user gesture
     talkShowChat();
 });
 document.getElementById("talkMuteBtn").addEventListener("click", talkToggleMute);
