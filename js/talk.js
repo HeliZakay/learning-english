@@ -550,6 +550,7 @@ function talkVoiceStop() {
     talkSpeakStop();
     talkListenStop();
     talkSetVoiceState("idle");
+    talkWakeRelease();
 }
 
 document.addEventListener("visibilitychange", function () {
@@ -887,6 +888,37 @@ function talkFetch(path, body) {
     });
 }
 
+// === Screen wake lock ===
+// A conversation is like a phone call — the screen must not dim and lock
+// while Samantha talks or mom thinks. Held for as long as the chat is open.
+
+var talkWakeLock = null;
+
+function talkWakeAcquire() {
+    if (!("wakeLock" in navigator)) return;
+    navigator.wakeLock.request("screen").then(function (lock) {
+        talkWakeLock = lock;
+    }).catch(function () {
+        // Denied or unsupported — the conversation still works.
+    });
+}
+
+function talkWakeRelease() {
+    if (talkWakeLock) {
+        talkWakeLock.release().catch(function () {});
+        talkWakeLock = null;
+    }
+}
+
+// The browser drops the lock whenever the tab hides; take it back when mom
+// returns to an open conversation.
+document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && talkState.started &&
+        document.getElementById("talkContainer").style.display === "block") {
+        talkWakeAcquire();
+    }
+});
+
 // === Sub-view toggling (same pattern as story mode) ===
 
 function talkShowIntro() {
@@ -897,6 +929,7 @@ function talkShowIntro() {
 function talkShowChat() {
     document.getElementById("talkIntro").style.display = "none";
     document.getElementById("talkChat").style.display = "flex";
+    talkWakeAcquire();
     if (!talkState.started) {
         talkState.started = true;
         var name = talkState.character ? talkState.character.name : "Friend";
