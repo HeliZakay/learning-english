@@ -34,19 +34,43 @@ var talkState = {
     micDenied: false   // mic permission refused — stop auto-listening
 };
 
-// Single place that reflects the voice state in the UI (status pill, mic).
+// Pure-voice conversation ("like a phone call") is the default whenever the
+// device can listen; muting the speaker falls back to the classic text chat.
+function talkVoiceMode() {
+    return talkMicSupported() && !talkMuted() && !talkState.micDenied;
+}
+
+// Single place that routes the whole UI by voice state and mode.
 function talkSetVoiceState(next) {
     talkState.voiceState = next;
+    var vm = talkVoiceMode();
     var pill = document.getElementById("talkVoiceStatus");
     var mic = document.getElementById("talkMicBtn");
     var name = talkState.character ? talkState.character.name : "She";
+    var speakingView = document.getElementById("talkSpeakingView");
+    var listenView = document.getElementById("talkListenView");
+    var listenHint = document.getElementById("talkListenHint");
+
+    document.getElementById("talkChat").classList.toggle("talk-voice-mode", vm);
     mic.disabled = (next === "thinking");
     mic.classList.toggle("talk-mic-speaking", next === "speaking");
-    // While she speaks, her big portrait takes over the messages area.
-    var speaking = next === "speaking";
-    document.getElementById("talkSpeakingView").style.display = speaking ? "flex" : "none";
-    document.getElementById("talkMessages").style.display = speaking ? "none" : "";
-    if (!speaking) talkScrollDown();
+
+    // Which big view fills the area: her portrait, the big mic, or the chat.
+    var showPortrait = next === "speaking" || (vm && next === "thinking");
+    var showBigMic = vm && (next === "listening" || next === "idle");
+    speakingView.style.display = showPortrait ? "flex" : "none";
+    speakingView.classList.toggle("thinking", next === "thinking");
+    listenView.style.display = showBigMic ? "flex" : "none";
+    listenView.classList.toggle("listening", next === "listening");
+    document.getElementById("talkMessages").style.display =
+        (showPortrait || showBigMic) ? "none" : "";
+    if (!showPortrait && !showBigMic) talkScrollDown();
+    if (showBigMic) {
+        listenHint.textContent = next === "listening"
+            ? "Speak freely — tap when you finish"
+            : "Tap to talk";
+    }
+
     if (next === "speaking") {
         pill.textContent = "🔊 " + name + " is speaking...";
         pill.className = "talk-voice-status";
@@ -54,7 +78,7 @@ function talkSetVoiceState(next) {
     } else if (next === "listening") {
         pill.textContent = "🎤 Speak freely — tap ✓ when you finish";
         pill.className = "talk-voice-status listening";
-        pill.style.display = "";
+        pill.style.display = vm ? "none" : "";
     } else if (next === "thinking") {
         pill.textContent = "💭 Thinking...";
         pill.className = "talk-voice-status";
@@ -84,8 +108,11 @@ function talkToggleMute() {
     document.getElementById("talkMuteBtn").textContent = muted ? "🔇" : "🔊";
     if (muted) {
         talkSpeakStop();
-        if (talkState.voiceState === "speaking") talkSetVoiceState("idle");
+        talkListenStop();
+        if (talkState.voiceState !== "thinking") talkState.voiceState = "idle";
     }
+    // Re-route the whole view: mute = classic text chat, unmute = voice call.
+    talkSetVoiceState(talkState.voiceState);
 }
 
 // One reused Audio element for all clips: after it is primed by a user
@@ -421,6 +448,7 @@ function talkOnListenFailed(errorCode) {
     if (errorCode === "not-allowed" || errorCode === "service-not-allowed") {
         talkState.micDenied = true;
         document.getElementById("talkMicBtn").classList.add("talk-mic-denied");
+        talkSetVoiceState("idle");   // re-route: falls back to the text chat
         talkShowHint("Samantha can't hear you — the microphone is blocked. " +
             "Tap the 🔒 next to the address to allow it. You can always type instead!");
         return;
@@ -440,9 +468,13 @@ function talkOnListenFailed(errorCode) {
     talkShowHint("Something went wrong with listening — tap the microphone 🎤 to try again.");
 }
 
-// A gentle in-chat hint (soft indigo, not the red error style). Only one
-// hint at a time — a new one replaces the old.
+// A gentle hint. In voice mode it appears under the big mic; in text mode
+// it's a soft in-chat bubble (only one at a time — a new one replaces it).
 function talkShowHint(text) {
+    if (talkVoiceMode()) {
+        document.getElementById("talkListenHint").textContent = text;
+        return;
+    }
     var old = document.querySelector(".talk-bubble-hint");
     if (old) old.parentNode.removeChild(old);
     talkAppendBubble("hint", text);
@@ -601,9 +633,14 @@ function talkShowChat() {
         document.getElementById("talkSpeakingName").textContent = name;
         talkAppendBubble("character", greeting);
         talkRenderStarters();
+        talkSetVoiceState("idle");
+        // In voice mode she greets out loud, then the mic opens by itself.
+        if (talkVoiceMode()) talkSpeak(greeting);
+    } else {
+        talkSetVoiceState(talkState.voiceState);
     }
     // Focusing the input pops the Android keyboard — skip it in voice mode.
-    if (!talkMicSupported() || talkMuted()) {
+    if (!talkVoiceMode()) {
         document.getElementById("talkInput").focus();
     }
 }
@@ -758,7 +795,10 @@ document.getElementById("talkStartBtn").addEventListener("click", function () {
 document.getElementById("talkMuteBtn").addEventListener("click", talkToggleMute);
 document.getElementById("talkMuteBtn").textContent = talkMuted() ? "🔇" : "🔊";
 document.getElementById("talkMicBtn").addEventListener("click", talkMicTap);
-document.getElementById("talkSpeakingView").addEventListener("click", talkInterrupt);
+document.getElementById("talkSpeakingView").addEventListener("click", function () {
+    if (talkState.voiceState === "speaking") talkInterrupt();
+});
+document.getElementById("talkListenView").addEventListener("click", talkMicTap);
 if (!talkMicSupported()) {
     document.getElementById("talkMicBtn").style.display = "none";
 }
