@@ -736,6 +736,69 @@ function talkUnmemorizedUserTurns() {
     return n;
 }
 
+// === Memory: personalized greeting (stage 22) ===
+
+// The date of the newest turn in the newest session — fresher than the
+// stored profile.lastTalked (which lags until the first turn logs).
+function talkLastTalkedDate() {
+    var data = talkMemLoad("talk_transcripts", { v: 1, sessions: [] });
+    var prev = data.sessions[data.sessions.length - 1];
+    if (!prev || !prev.updatedAt) return null;
+    var d = new Date(prev.updatedAt);
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) +
+        "-" + ("0" + d.getDate()).slice(-2);
+}
+
+// Kick off during the intro screen: absorb any leftover turns first (so the
+// greeting can reference the very last conversation), then ask for a fresh,
+// memory-aware opening line. First-ever visit: no profile → static greeting,
+// zero extra calls.
+function talkPrepareGreeting() {
+    talkMemState.greet = { promise: null, text: null, done: false };
+    if (!talkProfileText() && talkUnmemorizedUserTurns() === 0) {
+        talkMemState.greet.done = true;
+        return;
+    }
+    var lastTalked = talkLastTalkedDate();
+    talkMemState.greet.promise = talkMemorize()
+        .then(function () {
+            var profile = talkProfileText();
+            if (!profile) throw new Error("no profile");
+            return talkFetch("/greet", {
+                profile: profile,
+                clientDate: talkLocalDate(),
+                lastTalked: lastTalked || undefined
+            });
+        })
+        .then(function (data) {
+            talkMemState.greet.text = data.greeting;
+        })
+        .catch(function () {})
+        .then(function () {
+            talkMemState.greet.done = true;
+        });
+}
+
+// Hand the greeting to cb — instantly when ready (the usual case), else
+// after at most 2.5s, falling back to the static one.
+function talkResolveGreeting(cb) {
+    var g = talkMemState.greet;
+    var fallback = talkState.character ? talkState.character.greeting :
+        "Hello! It's so nice to meet you! How are you today?";
+    if (g.done) {
+        cb(g.text || fallback);
+        return;
+    }
+    var settled = false;
+    var finish = function () {
+        if (settled) return;
+        settled = true;
+        cb(g.text || fallback);
+    };
+    setTimeout(finish, 2500);
+    (g.promise || Promise.resolve()).then(finish, finish);
+}
+
 // Dev helpers (nothing in mom's UI). Reset from the browser console with:
 //   talkMemoryReset()
 function talkMemoryDebug() {
@@ -792,6 +855,7 @@ function startTalk() {
                     document.getElementById("talkIntroSubtitle").textContent =
                         data.character.name + " is here and would love to talk with you!";
                 }
+                if (!talkState.started) talkPrepareGreeting();
                 setTalkStatus("Server: connected ✓", "connected");
                 startBtn.style.display = "";
             } else {
@@ -836,15 +900,19 @@ function talkShowChat() {
     if (!talkState.started) {
         talkState.started = true;
         var name = talkState.character ? talkState.character.name : "Friend";
-        var greeting = talkState.character ? talkState.character.greeting :
-            "Hello! It's so nice to meet you! How are you today?";
         document.getElementById("talkCharName").textContent = name;
         document.getElementById("talkSpeakingName").textContent = name;
-        talkAppendBubble("character", greeting);
         talkRenderStarters();
-        talkSetVoiceState("idle");
-        // In voice mode she greets out loud, then the mic opens by itself.
-        if (talkVoiceMode()) talkSpeak(greeting);
+        // Usually the personalized greeting is already fetched (it raced the
+        // intro screen); if not, her portrait "thinks" for up to 2.5s.
+        talkSetVoiceState("thinking");
+        talkResolveGreeting(function (greeting) {
+            talkState.greetingUsed = greeting;
+            talkAppendBubble("character", greeting);
+            talkSetVoiceState("idle");
+            // In voice mode she greets out loud, then the mic opens by itself.
+            if (talkVoiceMode()) talkSpeak(greeting);
+        });
     } else {
         talkSetVoiceState(talkState.voiceState);
     }

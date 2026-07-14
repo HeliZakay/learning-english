@@ -4,7 +4,7 @@
 // daily cap. Mock mode: with no API keys configured, /chat returns
 // deterministic in-character replies so the app is fully testable locally.
 
-import { CHARACTER, buildSystemPrompt, buildMemorizePrompt, mockProfile, mockReply } from "./persona.js";
+import { CHARACTER, buildSystemPrompt, buildMemorizePrompt, buildGreetPrompt, MOCK_GREETING, mockProfile, mockReply } from "./persona.js";
 
 const ANTHROPIC_MODEL = "claude-sonnet-5";
 const ANTHROPIC_MEMORY_MODEL = "claude-haiku-4-5";  // cheap background distillation
@@ -294,6 +294,62 @@ async function handleMemorize(request, env, cors) {
     return json({ ok: true, profile, mock: false }, 200, cors);
 }
 
+// A fresh, memory-aware opening line for a new conversation.
+async function handleGreet(request, env, cors) {
+    let body;
+    try {
+        body = await request.json();
+    } catch {
+        return fail("bad_request", "Body must be JSON", 400, cors);
+    }
+    if (typeof body.profile !== "string" || body.profile.length === 0 || body.profile.length > MAX_PROFILE_CHARS) {
+        return fail("bad_request", "profile must be a non-empty string of up to " + MAX_PROFILE_CHARS + " chars", 400, cors);
+    }
+    if (body.clientDate !== undefined && (typeof body.clientDate !== "string" || !DATE_RE.test(body.clientDate))) {
+        return fail("bad_request", "clientDate must be YYYY-MM-DD", 400, cors);
+    }
+    if (body.lastTalked !== undefined && (typeof body.lastTalked !== "string" || !DATE_RE.test(body.lastTalked))) {
+        return fail("bad_request", "lastTalked must be YYYY-MM-DD", 400, cors);
+    }
+
+    if (!env.ANTHROPIC_API_KEY) {
+        return json({ ok: true, greeting: MOCK_GREETING, mock: true }, 200, cors);
+    }
+
+    let res;
+    try {
+        res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": env.ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                model: ANTHROPIC_MODEL,
+                max_tokens: 100,
+                thinking: { type: "disabled" },
+                system: buildGreetPrompt(body.profile, body.clientDate, body.lastTalked),
+                messages: [{ role: "user", content: "She just opened the app. Greet her." }],
+            }),
+        });
+    } catch (err) {
+        if (err && err.name === "AbortError") {
+            return fail("timeout", "The greeting took too long", 504, cors);
+        }
+        return fail("upstream_error", "Could not create the greeting", 502, cors);
+    }
+
+    if (!res.ok) return upstreamFail(res.status, cors);
+
+    const data = await res.json();
+    const textBlock = (data.content || []).find((b) => b.type === "text");
+    if (!textBlock || !textBlock.text) {
+        return fail("upstream_error", "Empty greeting", 502, cors);
+    }
+    return json({ ok: true, greeting: textBlock.text.trim(), mock: false }, 200, cors);
+}
+
 // Speech-to-text: the app records mom's turn as one audio blob (no Android
 // recognizer beeps/gaps) and sends it here for transcription.
 async function handleTranscribe(request, env, cors) {
@@ -353,6 +409,7 @@ export default {
             "/speak": handleSpeak,
             "/transcribe": handleTranscribe,
             "/memorize": handleMemorize,
+            "/greet": handleGreet,
         };
         if (guarded[url.pathname] && request.method === "POST") {
             if (request.headers.get("X-Talk-Token") !== env.TALK_APP_TOKEN) {

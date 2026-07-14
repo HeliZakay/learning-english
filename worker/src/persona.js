@@ -94,6 +94,22 @@ Rules:
 - Date ongoing events when she gives dates. Today is ${clientDate || "unknown"}.`;
 }
 
+// === Personalized greeting (/greet) ===
+
+export function buildGreetPrompt(profile, clientDate, lastTalked) {
+    return [
+        WHO_YOU_ARE,
+        WHO_YOU_TALK_TO,
+        HOW_TO_SPEAK,
+        `Today is ${clientDate || "a new day"}${lastTalked ? "; you last talked with her on " + lastTalked : ""}. You are opening a brand-new conversation with your friend. Using what you remember about her (below), greet her warmly in 1-2 short, simple sentences — like a friend picking up the thread, for example asking how something from last time went. End with a question. Output ONLY the greeting, nothing else.
+
+What you remember about her:
+${profile}`,
+    ].join("\n\n");
+}
+
+export const MOCK_GREETING = "Hello again, my friend! (mock) How is your family doing?";
+
 export function mockProfile(transcript) {
     const userTurns = transcript.filter((t) => t.role === "user").length;
     return "ABOUT HER:\n- (mock) She sent " + userTurns + " messages in the last conversation.\n\n" +
