@@ -148,8 +148,7 @@ var talkAudioState = {
     generation: 0,     // bumped by talkSpeakStop(); stale callbacks compare & bail
     queue: [],         // [{text, controller, promise (resolves to objectURL)}]
     index: 0,          // next queue slot to play
-    fetched: 0,        // how many queue items have started fetching
-    playedAny: false   // did any clip actually reach the speaker this reply?
+    fetched: 0         // how many queue items have started fetching
 };
 
 // The last reply's audio, kept as Blobs so 🔁 replay is instant and free —
@@ -205,7 +204,7 @@ function talkFetchSpeech(text, controller) {
 // Speak a character reply aloud, sentence by sentence: clip 2 downloads
 // while clip 1 plays, so Samantha starts talking quickly. The text bubble is
 // already on screen; any failure is silent. Calls
-// talkOnCharacterDone(playedAny) when the last clip ends (or on failure).
+// talkOnCharacterDone() when the last clip ends (or on failure).
 function talkSpeak(reply) {
     talkSpeakStop();
     // Seed the replay cache before the mute/unlock bail-out so the quiet
@@ -213,7 +212,7 @@ function talkSpeak(reply) {
     var texts = talkSplitSentences(reply);
     talkReplayState = { text: reply, texts: texts, clips: [], got: 0 };
     if (talkMuted() || !talkAudioState.unlocked) {
-        talkOnCharacterDone(false);
+        talkOnCharacterDone();
         return;
     }
     var gen = talkAudioState.generation;
@@ -223,7 +222,6 @@ function talkSpeak(reply) {
     });
     talkAudioState.index = 0;
     talkAudioState.fetched = 0;
-    talkAudioState.playedAny = false;
 
     talkPrefetch(gen);
     talkPlayNext(gen);
@@ -257,7 +255,7 @@ function talkPlayNext(gen) {
     var s = talkAudioState;
     if (gen !== s.generation) return;
     if (s.index >= s.queue.length) {
-        talkOnCharacterDone(s.playedAny);
+        talkOnCharacterDone();
         return;
     }
     var item = s.queue[s.index];
@@ -275,15 +273,14 @@ function talkPlayNext(gen) {
             talkPlayNext(gen);
         };
         talkAudioEl.src = url;
-        s.playedAny = true;
         talkSetVoiceState("speaking");
         talkAudioEl.play().catch(function () {
             URL.revokeObjectURL(url);
-            if (gen === s.generation) talkOnCharacterDone(s.playedAny);
+            if (gen === s.generation) talkOnCharacterDone();
         });
     }, function () {
         // One sentence failed: stop the voice attempt for this reply quietly.
-        if (gen === s.generation) talkOnCharacterDone(s.playedAny);
+        if (gen === s.generation) talkOnCharacterDone();
     });
 }
 
@@ -306,18 +303,12 @@ function talkSpeakStop() {
     talkAudioEl.removeAttribute("src");
 }
 
-// Called once when Samantha finishes (or fails) speaking a reply.
-// playedAny = whether any audio actually reached the speaker. If she truly
-// spoke, the mic opens automatically — that's the conversation loop. If the
-// turn was silent (muted / TTS failed), auto-listening would feel random.
-function talkOnCharacterDone(playedAny) {
-    // Leave "speaking" first — talkListenStart refuses while speaking.
+// Called once when Samantha finishes (or fails) speaking a reply. Lands on
+// the idle mic screen, which shows her reply as text — mom reads at her own
+// pace (maybe replays), then taps to start recording. The mic never opens
+// by itself; interrupting her (talkInterrupt) is the only auto-record path.
+function talkOnCharacterDone() {
     talkSetVoiceState("idle");
-    var chatVisible = document.getElementById("talkChat").style.display !== "none";
-    if (playedAny && !talkMuted() && talkMicSupported() && !talkState.micDenied &&
-        chatVisible && !document.hidden) {
-        talkListenStart();
-    }
 }
 
 // === Voice input (mom speaks) ===
@@ -606,7 +597,7 @@ function talkUpdateListenReply() {
 // 🔁: play Samantha's last reply again from the Blob cache — instant, no
 // /speak re-fetch. If mom is mid-recording, that recording is discarded
 // ("wait, let me hear that again first"); when the replay ends,
-// talkOnCharacterDone reopens the mic as usual.
+// talkOnCharacterDone lands back on the read-then-tap mic screen.
 function talkReplayLast() {
     var r = talkReplayState;
     if (!r.text || r.got !== r.texts.length || talkState.sending) return;
@@ -620,7 +611,6 @@ function talkReplayLast() {
     });
     talkAudioState.index = 0;
     talkAudioState.fetched = talkAudioState.queue.length;  // prefetch no-ops
-    talkAudioState.playedAny = false;
     talkPlayNext(gen);
 }
 
