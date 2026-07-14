@@ -70,6 +70,9 @@ function talkSetVoiceState(next) {
             ? "Speak freely — tap when you finish"
             : "Tap to talk";
     }
+    if (next !== "listening") {
+        document.getElementById("talkListenTranscript").textContent = "";
+    }
 
     if (next === "speaking") {
         pill.textContent = "🔊 " + name + " is speaking...";
@@ -498,6 +501,11 @@ function talkUpdatePendingBubble(text) {
         el.textContent = text;
         talkScrollDown();
     }
+    // Voice mode: live transcript under the big mic, so she can see that
+    // the app hears her correctly.
+    var live = document.getElementById("talkListenTranscript");
+    live.textContent = text === "..." ? "" : text;
+    live.scrollTop = live.scrollHeight;
 }
 
 function talkRemovePendingBubble() {
