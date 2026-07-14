@@ -269,7 +269,20 @@ function talkCreateRecognition() {
 }
 
 var talkRec = null;              // active recognition instance, null when idle
-var talkListenState = { finalText: "", interimText: "", errorCode: null };
+
+// One "turn" of listening spans several short recognition rounds: Android
+// Chrome ends recognition at every silence no matter what, so when a round
+// dies we quietly start another and keep collecting. Only the ✓ tap (done),
+// a fatal error, or ~3 empty rounds of silence truly ends the turn.
+var talkListenState = {
+    collected: "",       // finalized text from completed rounds
+    sessionFinal: "",    // finalized text within the current round
+    sessionInterim: "",  // LAST interim of the current round (Android sends
+                         // cumulative interims — concatenating them garbles)
+    errorCode: null,
+    done: false,         // she tapped ✓
+    emptyRounds: 0
+};
 
 function talkListening() {
     return talkRec !== null;
@@ -280,52 +293,70 @@ function talkListenStart() {
     // Never open the mic while Samantha's audio plays — it would hear her.
     // The only legal path from speaking to listening is talkInterrupt().
     if (talkState.voiceState === "speaking") return;
+    talkListenState = {
+        collected: "", sessionFinal: "", sessionInterim: "",
+        errorCode: null, done: false, emptyRounds: 0
+    };
+    talkListenRound();
+}
+
+// Start one recognition round (also used to seamlessly continue after
+// Android's silence cut-offs).
+function talkListenRound() {
     var rec = talkCreateRecognition();
     if (!rec) return;
     talkRec = rec;
-    talkListenState = { finalText: "", interimText: "", errorCode: null };
+    talkListenState.sessionFinal = "";
+    talkListenState.sessionInterim = "";
+    talkListenState.errorCode = null;
 
-    // Keep listening through thinking pauses — the turn ends only when she
-    // taps the ✓ button (real-phone feedback: silence-detection cut her off
-    // mid-thought). Chrome can still end on its own after long inactivity;
-    // onend handles both the tap and that case identically.
-    rec.continuous = true;
+    rec.continuous = false;   // Android ends on silence anyway; we restart
     rec.interimResults = true;
     rec.lang = "en-US";
     rec.maxAlternatives = 1;
 
     rec.onstart = function () {
+        if (talkRec !== rec) return;
         var mic = document.getElementById("talkMicBtn");
         mic.classList.add("talk-mic-listening");
         mic.textContent = "✓";   // while listening, the mic button means "I'm done"
         talkSetVoiceState("listening");
-        talkShowPendingBubble();
+        if (!document.getElementById("talkPendingBubble")) talkShowPendingBubble();
     };
     rec.onresult = function (event) {
-        var finals = "", interims = "";
+        if (talkRec !== rec) return;
+        var finals = "", lastInterim = "";
         for (var i = 0; i < event.results.length; i++) {
             var t = event.results[i][0].transcript;
-            if (event.results[i].isFinal) finals += t;
-            else interims += t;
+            if (event.results[i].isFinal) finals += " " + t;
+            else lastInterim = t;   // keep only the last (cumulative on Android)
         }
-        talkListenState.finalText = finals;
-        talkListenState.interimText = interims;
-        talkUpdatePendingBubble((finals + " " + interims).trim() || "...");
+        talkListenState.sessionFinal = finals;
+        talkListenState.sessionInterim = lastInterim;
+        talkUpdatePendingBubble(talkListenText() || "...");
     };
     rec.onerror = function (event) {
+        if (talkRec !== rec) return;
         talkListenState.errorCode = event.error;
     };
     rec.onend = function () {
+        if (talkRec !== rec) return;  // stale round or cancelled
         talkOnRecognitionEnd();
     };
     rec.start();
+}
+
+// Everything she has said this turn, cleaned up.
+function talkListenText() {
+    return (talkListenState.collected + " " + talkListenState.sessionFinal +
+        " " + talkListenState.sessionInterim).replace(/\s+/g, " ").trim();
 }
 
 // Cancel listening without sending anything.
 function talkListenStop() {
     if (!talkRec) return;
     var rec = talkRec;
-    talkRec = null;               // onend sees no active rec → pure cleanup
+    talkRec = null;               // onend sees a stale rec → pure cleanup
     rec.onend = null;
     rec.onresult = null;
     rec.onerror = null;
@@ -340,30 +371,48 @@ function talkListenStop() {
 // She tapped ✓: finalize whatever was said and let onend send it.
 function talkListenDone() {
     if (!talkRec) return;
+    talkListenState.done = true;
     try { talkRec.stop(); } catch (e) {}
 }
 
-// The single decision point: recognition ended (silence, error, or timeout).
+// A round ended (silence, ✓ tap via stop(), or an error).
 function talkOnRecognitionEnd() {
-    if (!talkRec) return;         // already cancelled via talkListenStop
+    var s = talkListenState;
+    var sessionText = (s.sessionFinal + " " + s.sessionInterim).replace(/\s+/g, " ").trim();
+    var fatal = s.errorCode === "not-allowed" || s.errorCode === "service-not-allowed" ||
+        s.errorCode === "audio-capture" || s.errorCode === "network";
+
+    // Keep listening: she hasn't tapped ✓ and nothing fatal happened.
+    if (!s.done && !fatal) {
+        if (sessionText) {
+            s.collected = (s.collected + " " + sessionText).replace(/\s+/g, " ").trim();
+            s.emptyRounds = 0;
+        } else {
+            s.emptyRounds++;
+        }
+        // She said something already, or is still within the silence grace
+        // window — quietly start the next round.
+        if (s.collected || s.emptyRounds < 3) {
+            talkListenRound();
+            return;
+        }
+        // ~3 silent rounds and not a word: she's probably not there.
+    }
+
+    // Finish the turn.
     talkRec = null;
     var mic = document.getElementById("talkMicBtn");
     mic.classList.remove("talk-mic-listening");
     mic.textContent = "🎤";
+    talkRemovePendingBubble();
 
-    // Send everything she said: finalized segments plus whatever was still
-    // interim when the turn ended (words spoken right before tapping ✓, or
-    // Android's known never-finalized results).
-    var text = (talkListenState.finalText + " " + talkListenState.interimText)
-        .replace(/\s+/g, " ").trim();
+    var text = (s.collected + " " + sessionText).replace(/\s+/g, " ").trim();
     if (text) {
-        talkRemovePendingBubble();
-        talkSendText(text);       // auto-send: she talks, it sends
+        talkSendText(text);
         return;
     }
-    talkRemovePendingBubble();
     talkSetVoiceState("idle");
-    talkOnListenFailed(talkListenState.errorCode);
+    talkOnListenFailed(s.errorCode);
 }
 
 // No usable speech — explain kindly and leave mom in control.
