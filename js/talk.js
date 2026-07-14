@@ -566,6 +566,134 @@ function setTalkStatus(text, className) {
     el.className = "talk-status" + (className ? " " + className : "");
 }
 
+// === Memory: transcripts (stage 19) ===
+// Every turn is saved to localStorage the moment it happens (mobile tabs die
+// without warning), grouped into one session per page load. A later stage
+// distills these into Samantha's long-term memory profile.
+
+var TALK_MAX_SESSIONS = 20;
+var TALK_MAX_TRANSCRIPT_CHARS = 200 * 1024;
+
+var talkMemState = {
+    sessionId: null,                     // created lazily on first logged turn
+    memorizing: false,
+    greet: { promise: null, text: null, done: false }
+};
+
+function talkMemLoad(key, fallback) {
+    try {
+        var raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function talkMemSave(key, obj) {
+    try {
+        localStorage.setItem(key, JSON.stringify(obj));
+        return true;
+    } catch (e) {
+        // Quota exceeded: prune transcripts hard and retry once.
+        try {
+            var t = talkMemLoad("talk_transcripts", null);
+            if (t && t.sessions.length > 1) {
+                t.sessions = t.sessions.slice(-2);
+                localStorage.setItem("talk_transcripts", JSON.stringify(t));
+                localStorage.setItem(key, JSON.stringify(obj));
+                return true;
+            }
+        } catch (e2) {}
+        return false;
+    }
+}
+
+// Device-local calendar date — never toISOString (UTC would be a day off in
+// the Israeli evening, exactly when mom chats).
+function talkLocalDate() {
+    var d = new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) +
+        "-" + ("0" + d.getDate()).slice(-2);
+}
+
+function talkPruneTranscripts(data) {
+    var over = function () {
+        return data.sessions.length > TALK_MAX_SESSIONS ||
+            JSON.stringify(data).length > TALK_MAX_TRANSCRIPT_CHARS;
+    };
+    while (data.sessions.length > 1 && over()) {
+        // Prefer dropping the oldest fully-memorized session.
+        var idx = 0;
+        for (var i = 0; i < data.sessions.length - 1; i++) {
+            if (data.sessions[i].memorized >= data.sessions[i].turns.length) {
+                idx = i;
+                break;
+            }
+        }
+        data.sessions.splice(idx, 1);
+    }
+}
+
+function talkLogTurn(role, content) {
+    var data = talkMemLoad("talk_transcripts", { v: 1, sessions: [] });
+    if (!talkMemState.sessionId) {
+        // First logged turn this page load: remember when we last talked
+        // (the newest turn of the previous session), then open a session.
+        var prev = data.sessions[data.sessions.length - 1];
+        if (prev) {
+            var profile = talkMemLoad("talk_profile", { v: 1, updatedAt: 0, text: "", lastTalked: null });
+            var d = new Date(prev.updatedAt);
+            profile.lastTalked = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) +
+                "-" + ("0" + d.getDate()).slice(-2);
+            talkMemSave("talk_profile", profile);
+        }
+        talkMemState.sessionId = "s_" + Date.now();
+        data.sessions.push({
+            id: talkMemState.sessionId,
+            startedAt: Date.now(),
+            updatedAt: Date.now(),
+            memorized: 0,
+            turns: []
+        });
+    }
+    var session = null;
+    for (var i = 0; i < data.sessions.length; i++) {
+        if (data.sessions[i].id === talkMemState.sessionId) session = data.sessions[i];
+    }
+    if (!session) return;
+    session.turns.push({ role: role, content: content, t: Date.now() });
+    session.updatedAt = Date.now();
+    talkPruneTranscripts(data);
+    talkMemSave("talk_transcripts", data);
+}
+
+// Dev helpers (nothing in mom's UI). Reset from the browser console with:
+//   talkMemoryReset()
+function talkMemoryDebug() {
+    var t = talkMemLoad("talk_transcripts", { sessions: [] });
+    var p = talkMemLoad("talk_profile", {});
+    var turns = 0, unmemorized = 0;
+    t.sessions.forEach(function (s) {
+        turns += s.turns.length;
+        unmemorized += s.turns.length - (s.memorized || 0);
+    });
+    return {
+        profile: p.text || "(none)",
+        lastTalked: p.lastTalked || null,
+        sessions: t.sessions.length,
+        turns: turns,
+        unmemorized: unmemorized,
+        bytes: (localStorage.getItem("talk_transcripts") || "").length
+    };
+}
+
+function talkMemoryReset() {
+    localStorage.removeItem("talk_transcripts");
+    localStorage.removeItem("talk_profile");
+    talkMemState.sessionId = null;
+    return "Samantha's memory was erased.";
+}
+
 // === Mode entry ===
 
 function startTalk() {
@@ -725,6 +853,7 @@ function talkSend() {
 function talkSendText(text) {
     if (talkState.sending) return;
     talkState.history.push({ role: "user", content: text });
+    talkLogTurn("user", text);
     talkAppendBubble("user", text);
     talkHideStarters();
     talkSetVoiceState("thinking");
@@ -742,6 +871,7 @@ function talkRequestReply() {
     talkFetch("/chat", { messages: history })
         .then(function (data) {
             talkState.history.push({ role: "assistant", content: data.reply });
+            talkLogTurn("assistant", data.reply);
             talkAppendBubble("character", data.reply);
             talkSpeak(data.reply);
         })
