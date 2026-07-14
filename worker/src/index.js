@@ -8,7 +8,15 @@ import { CHARACTER, buildSystemPrompt, mockReply } from "./persona.js";
 
 const ANTHROPIC_MODEL = "claude-sonnet-5";
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
-const DEFAULT_VOICE = "nova";
+const DEFAULT_VOICE = "sage";
+// Voice direction chosen in the tasting sessions (2026-07-14): mature age
+// anchor + "bold charm" character.
+const DEFAULT_SPEAK_INSTRUCTIONS =
+    "A woman in her late sixties with natural vocal maturity and gentle age " +
+    "texture — clearly not young. Bold and confident with theatrical charm: " +
+    "self-assured, charismatic and fun, a knowing chuckle just under the " +
+    "surface, spirited pace with playful emphasis — an elegant woman who " +
+    "lights up a room.";
 const MAX_HISTORY = 30;
 const MAX_SPEAK_CHARS = 1000;
 const UPSTREAM_TIMEOUT_MS = 30000;
@@ -167,6 +175,9 @@ async function handleSpeak(request, env, cors) {
                 voice: typeof body.voice === "string" && body.voice ? body.voice : DEFAULT_VOICE,
                 input: body.text,
                 response_format: "mp3",
+                instructions: typeof body.instructions === "string" && body.instructions.length <= 500
+                    ? body.instructions
+                    : DEFAULT_SPEAK_INSTRUCTIONS,
             }),
         });
     } catch (err) {

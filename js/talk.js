@@ -42,6 +42,11 @@ function talkSetVoiceState(next) {
     var name = talkState.character ? talkState.character.name : "She";
     mic.disabled = (next === "thinking");
     mic.classList.toggle("talk-mic-speaking", next === "speaking");
+    // While she speaks, her big portrait takes over the messages area.
+    var speaking = next === "speaking";
+    document.getElementById("talkSpeakingView").style.display = speaking ? "flex" : "none";
+    document.getElementById("talkMessages").style.display = speaking ? "none" : "";
+    if (!speaking) talkScrollDown();
     if (next === "speaking") {
         pill.textContent = "🔊 " + name + " is speaking...";
         pill.className = "talk-voice-status";
@@ -61,8 +66,9 @@ function talkSetVoiceState(next) {
 
 // === Voice output (Samantha speaks) ===
 
-// Samantha's TTS voice — "nova" chosen in the voice-tasting session (2026-07-14).
-var TALK_DEFAULT_VOICE = "nova";
+// Samantha's TTS voice — "sage" (with the worker's bold-charm age
+// instructions) chosen in the voice-tasting sessions (2026-07-14).
+var TALK_DEFAULT_VOICE = "sage";
 
 function talkVoice() {
     return localStorage.getItem("talk_voice") || TALK_DEFAULT_VOICE;
@@ -157,6 +163,7 @@ function talkSpeak(reply) {
         return;
     }
     var gen = talkAudioState.generation;
+    document.getElementById("talkSpeakingText").textContent = reply;
     talkAudioState.queue = talkSplitSentences(reply).map(function (text) {
         return { text: text, controller: null, promise: null };
     });
@@ -542,6 +549,7 @@ function talkShowChat() {
         var greeting = talkState.character ? talkState.character.greeting :
             "Hello! It's so nice to meet you! How are you today?";
         document.getElementById("talkCharName").textContent = name;
+        document.getElementById("talkSpeakingName").textContent = name;
         talkAppendBubble("character", greeting);
         talkRenderStarters();
     }
@@ -701,6 +709,7 @@ document.getElementById("talkStartBtn").addEventListener("click", function () {
 document.getElementById("talkMuteBtn").addEventListener("click", talkToggleMute);
 document.getElementById("talkMuteBtn").textContent = talkMuted() ? "🔇" : "🔊";
 document.getElementById("talkMicBtn").addEventListener("click", talkMicTap);
+document.getElementById("talkSpeakingView").addEventListener("click", talkInterrupt);
 if (!talkMicSupported()) {
     document.getElementById("talkMicBtn").style.display = "none";
 }
