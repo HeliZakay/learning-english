@@ -329,6 +329,39 @@
     display: none;
 }
 
+/* Samantha's last reply, quietly, on mom's turn — plus the 🔁 replay chip.
+   Deliberately small and grey: readable, but not a chat. */
+.talk-listen-reply {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    width: 100%;
+    cursor: default;
+}
+
+.talk-listen-reply-text {
+    font-size: 14px;
+    color: #6B7280;
+    text-align: center;
+    line-height: 1.45;
+    max-height: 84px;
+    overflow-y: auto;
+}
+
+.talk-replay-btn {
+    border: none;
+    border-radius: 999px;
+    min-height: 40px;
+    padding: 8px 20px;
+    background: #E0E7FF;
+    color: #3730A3;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 /* Voice mode: review what the mic heard before sending it to Samantha */
 
 .talk-review-view {

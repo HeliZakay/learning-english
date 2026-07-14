@@ -84,6 +84,12 @@ function talkSetVoiceState(next) {
     if (next !== "review") {
         talkState.pendingText = null;
     }
+    // A new turn is starting: the previous reply's text and cached audio are
+    // history — mom can no longer replay them.
+    if (next === "thinking") {
+        talkReplayState = { text: null, texts: [], clips: [], got: 0 };
+    }
+    if (showBigMic) talkUpdateListenReply();
 
     if (next === "speaking") {
         pill.textContent = "🔊 " + name + " is speaking...";
@@ -146,6 +152,11 @@ var talkAudioState = {
     playedAny: false   // did any clip actually reach the speaker this reply?
 };
 
+// The last reply's audio, kept as Blobs so 🔁 replay is instant and free —
+// no /speak re-fetch. Replaced wholesale on each talkSpeak; stale fetch
+// callbacks close over the OLD object, so they can't pollute a newer reply.
+var talkReplayState = { text: null, texts: [], clips: [], got: 0 };
+
 // Split a reply into speakable sentences, merging fragments under 25 chars
 // into a neighbor so "Oh!" doesn't become its own choppy clip.
 function talkSplitSentences(text) {
@@ -173,8 +184,8 @@ function talkAudioUnlock() {
     }
 }
 
-// POST /speak and resolve with an object URL for the MP3 (rejects on any
-// failure — callers degrade to text-only, never an error bubble).
+// POST /speak and resolve with the MP3 Blob (rejects on any failure —
+// callers degrade to text-only, never an error bubble).
 function talkFetchSpeech(text, controller) {
     return fetch(talkWorkerUrl().replace(/\/$/, "") + "/speak", {
         method: "POST",
@@ -188,8 +199,6 @@ function talkFetchSpeech(text, controller) {
         var type = res.headers.get("Content-Type") || "";
         if (!res.ok || type.indexOf("audio/") !== 0) throw new Error("speech unavailable");
         return res.blob();
-    }).then(function (blob) {
-        return URL.createObjectURL(blob);
     });
 }
 
@@ -199,13 +208,17 @@ function talkFetchSpeech(text, controller) {
 // talkOnCharacterDone(playedAny) when the last clip ends (or on failure).
 function talkSpeak(reply) {
     talkSpeakStop();
+    // Seed the replay cache before the mute/unlock bail-out so the quiet
+    // text on the mic screen still shows even when TTS is skipped.
+    var texts = talkSplitSentences(reply);
+    talkReplayState = { text: reply, texts: texts, clips: [], got: 0 };
     if (talkMuted() || !talkAudioState.unlocked) {
         talkOnCharacterDone(false);
         return;
     }
     var gen = talkAudioState.generation;
     document.getElementById("talkSpeakingText").textContent = reply;
-    talkAudioState.queue = talkSplitSentences(reply).map(function (text) {
+    talkAudioState.queue = texts.map(function (text) {
         return { text: text, controller: null, promise: null };
     });
     talkAudioState.index = 0;
@@ -222,11 +235,20 @@ function talkPrefetch(gen) {
     var s = talkAudioState;
     if (gen !== s.generation) return;
     while (s.fetched < s.queue.length && s.fetched - s.index < 2) {
-        (function (item) {
+        (function (item, idx, cache) {
             item.controller = new AbortController();
-            item.promise = talkFetchSpeech(item.text, item.controller);
+            item.promise = talkFetchSpeech(item.text, item.controller).then(function (blob) {
+                // Bank the Blob for 🔁 replay (identity check: a stale fetch
+                // from an interrupted reply must not pollute a newer cache),
+                // then hand downstream the object URL it has always expected.
+                if (cache === talkReplayState && !cache.clips[idx]) {
+                    cache.clips[idx] = blob;
+                    cache.got++;
+                }
+                return URL.createObjectURL(blob);
+            });
             item.promise.then(function () { talkPrefetch(gen); }, function () {});
-        })(s.queue[s.fetched]);
+        })(s.queue[s.fetched], s.fetched, talkReplayState);
         s.fetched++;
     }
 }
@@ -568,6 +590,38 @@ function talkMicTap() {
         return;
     }
     talkListenStart();
+}
+
+// Sync the quiet reply block on the mic screen with the replay cache:
+// text whenever there is a last reply, the 🔁 button only when every
+// sentence's audio actually made it into the cache.
+function talkUpdateListenReply() {
+    var r = talkReplayState;
+    document.getElementById("talkListenReplyText").textContent = r.text || "";
+    document.getElementById("talkListenReply").style.display = r.text ? "" : "none";
+    document.getElementById("talkReplayBtn").style.display =
+        (r.texts.length > 0 && r.got === r.texts.length) ? "" : "none";
+}
+
+// 🔁: play Samantha's last reply again from the Blob cache — instant, no
+// /speak re-fetch. If mom is mid-recording, that recording is discarded
+// ("wait, let me hear that again first"); when the replay ends,
+// talkOnCharacterDone reopens the mic as usual.
+function talkReplayLast() {
+    var r = talkReplayState;
+    if (!r.text || r.got !== r.texts.length || talkState.sending) return;
+    if (talkListening()) talkListenStop();   // discard, don't transcribe
+    talkSpeakStop();                          // bump generation first
+    var gen = talkAudioState.generation;
+    document.getElementById("talkSpeakingText").textContent = r.text;
+    talkAudioState.queue = r.texts.map(function (text, i) {
+        return { text: text, controller: null,
+                 promise: Promise.resolve(URL.createObjectURL(r.clips[i])) };
+    });
+    talkAudioState.index = 0;
+    talkAudioState.fetched = talkAudioState.queue.length;  // prefetch no-ops
+    talkAudioState.playedAny = false;
+    talkPlayNext(gen);
 }
 
 // Politely cut Samantha off: stop her audio NOW, then open the mic. Both
@@ -1164,6 +1218,13 @@ document.getElementById("talkSpeakingView").addEventListener("click", function (
     if (talkState.voiceState === "speaking") talkInterrupt();
 });
 document.getElementById("talkListenView").addEventListener("click", talkMicTap);
+document.getElementById("talkReplayBtn").addEventListener("click", function (e) {
+    e.stopPropagation();   // the listen view's own click is talkMicTap
+    talkReplayLast();
+});
+document.getElementById("talkListenReply").addEventListener("click", function (e) {
+    e.stopPropagation();   // touching/scrolling the text must not toggle the mic
+});
 document.getElementById("talkReviewSendBtn").addEventListener("click", talkReviewSend);
 document.getElementById("talkReviewAgainBtn").addEventListener("click", talkReviewAgain);
 if (!talkMicSupported()) {
