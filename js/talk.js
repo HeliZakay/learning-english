@@ -553,7 +553,11 @@ function talkVoiceStop() {
 }
 
 document.addEventListener("visibilitychange", function () {
-    if (document.hidden) talkVoiceStop();
+    if (document.hidden) {
+        talkVoiceStop();
+        // Best effort: bank what she shared before the tab might be killed.
+        if (talkUnmemorizedUserTurns() >= 1) talkMemorize();
+    }
 });
 
 function talkWorkerUrl() {
@@ -665,6 +669,71 @@ function talkLogTurn(role, content) {
     session.updatedAt = Date.now();
     talkPruneTranscripts(data);
     talkMemSave("talk_transcripts", data);
+}
+
+// === Memory: profile extraction (stage 20) ===
+
+function talkProfileText() {
+    return talkMemLoad("talk_profile", {}).text || null;
+}
+
+// Turns not yet absorbed into the profile, with per-session counts so the
+// bookkeeping can advance exactly what was sent.
+function talkUnmemorized() {
+    var data = talkMemLoad("talk_transcripts", { v: 1, sessions: [] });
+    var turns = [], counts = {};
+    data.sessions.forEach(function (s) {
+        var fresh = s.turns.slice(s.memorized || 0);
+        if (fresh.length) {
+            counts[s.id] = s.turns.length;   // absorb up to the current end
+            fresh.forEach(function (t) { turns.push({ role: t.role, content: t.content }); });
+        }
+    });
+    return { turns: turns.slice(-40), counts: counts };
+}
+
+// Fire-and-forget: distill unabsorbed turns into the profile. Failures are
+// silent — the transcript is durable, so the next trigger retries.
+// Returns a promise so stage 22 can chain the greeting after a catch-up.
+function talkMemorize() {
+    if (talkMemState.memorizing) return Promise.resolve();
+    var snapshot = talkUnmemorized();
+    if (snapshot.turns.length === 0) return Promise.resolve();
+    talkMemState.memorizing = true;
+
+    return talkFetch("/memorize", {
+        transcript: snapshot.turns,
+        profile: talkProfileText() || undefined,
+        clientDate: talkLocalDate()
+    }).then(function (data) {
+        var profile = talkMemLoad("talk_profile", { v: 1, updatedAt: 0, text: "", lastTalked: null });
+        profile.text = data.profile;
+        profile.updatedAt = Date.now();
+        talkMemSave("talk_profile", profile);
+        var transcripts = talkMemLoad("talk_transcripts", { v: 1, sessions: [] });
+        transcripts.sessions.forEach(function (s) {
+            if (snapshot.counts[s.id] !== undefined) {
+                s.memorized = Math.max(s.memorized || 0, snapshot.counts[s.id]);
+            }
+        });
+        talkMemSave("talk_transcripts", transcripts);
+    }).catch(function () {
+        // Silent — retried on the next trigger.
+    }).then(function () {
+        talkMemState.memorizing = false;
+    });
+}
+
+// How many of this session's user turns are still unabsorbed.
+function talkUnmemorizedUserTurns() {
+    var data = talkMemLoad("talk_transcripts", { v: 1, sessions: [] });
+    var n = 0;
+    data.sessions.forEach(function (s) {
+        s.turns.slice(s.memorized || 0).forEach(function (t) {
+            if (t.role === "user") n++;
+        });
+    });
+    return n;
 }
 
 // Dev helpers (nothing in mom's UI). Reset from the browser console with:
@@ -868,12 +937,18 @@ function talkRequestReply() {
     // Mirror of the worker's history cap, to keep payloads small.
     var history = talkState.history.slice(-30);
 
-    talkFetch("/chat", { messages: history })
+    talkFetch("/chat", {
+        messages: history,
+        profile: talkProfileText() || undefined,
+        clientDate: talkLocalDate(),
+        greeting: talkState.greetingUsed || undefined
+    })
         .then(function (data) {
             talkState.history.push({ role: "assistant", content: data.reply });
             talkLogTurn("assistant", data.reply);
             talkAppendBubble("character", data.reply);
             talkSpeak(data.reply);
+            if (talkUnmemorizedUserTurns() >= 6) talkMemorize();
         })
         .catch(function (err) {
             talkSetVoiceState("idle");

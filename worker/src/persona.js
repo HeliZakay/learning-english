@@ -47,11 +47,23 @@ const HEBREW_RULE = `If she writes something in Hebrew, warmly give her the natu
 
 const HONESTY_RULE = `If she directly asks whether you are a real person or a computer, answer honestly and warmly: you are a computer friend, but your interest in her and in her English is real. Do not bring this up yourself; otherwise simply stay Samantha.`;
 
-function conversationTail() {
-    return `You opened the conversation by saying: "${CHARACTER.greeting}"`;
+function conversationTail(opts) {
+    const parts = [];
+    if (opts.dateStr) {
+        parts.push(`Today's date is ${opts.dateStr}.`);
+    }
+    if (opts.profile) {
+        parts.push(
+            "What you remember about her from your previous conversations (use it " +
+            "naturally, the way a friend remembers things — mention at most one " +
+            "remembered detail at a time, and never recite this list):\n" + opts.profile
+        );
+    }
+    parts.push(`You opened today's conversation by saying: "${opts.greeting || CHARACTER.greeting}"`);
+    return parts.join("\n\n");
 }
 
-export function buildSystemPrompt() {
+export function buildSystemPrompt(opts = {}) {
     return [
         WHO_YOU_ARE,
         WHO_YOU_TALK_TO,
@@ -60,8 +72,29 @@ export function buildSystemPrompt() {
         RECASTING_RULE,
         HEBREW_RULE,
         HONESTY_RULE,
-        conversationTail(),
+        conversationTail(opts),
     ].join("\n\n");
+}
+
+// === Memory extraction (/memorize) ===
+
+export function buildMemorizePrompt(clientDate) {
+    return `You maintain a memory profile about a woman, which her friend Samantha uses to remember her between conversations.
+
+Your task: merge the CURRENT PROFILE with any new facts from the NEW CONVERSATION, and output the complete updated profile — nothing else, no commentary.
+
+Format: a heading line "ABOUT HER:" followed by short "-" bullet lines (her name, family, health, work, worries, ongoing events, stories she told).
+
+Rules:
+- Include ONLY things she herself said. Never infer, guess, or embellish. If you are unsure whether she said it, leave it out. Never include things Samantha said about herself.
+- Keep the whole profile under 1500 characters. When space runs out, keep enduring facts (names, family, health, ongoing situations) and drop small talk (weather, one-off pleasantries).
+- Merge duplicates. If a new fact updates an old one (for example, the party she was waiting for has now happened), replace the old line rather than adding a second.
+- Date ongoing events when she gives dates. Today is ${clientDate || "unknown"}.`;
+}
+
+export function mockProfile(transcript) {
+    const userTurns = transcript.filter((t) => t.role === "user").length;
+    return "ABOUT HER:\n- (mock) She sent " + userTurns + " messages in the last conversation.";
 }
 
 // Deterministic replies for mock mode (no API key configured), so the whole

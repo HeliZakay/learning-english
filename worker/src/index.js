@@ -4,9 +4,13 @@
 // daily cap. Mock mode: with no API keys configured, /chat returns
 // deterministic in-character replies so the app is fully testable locally.
 
-import { CHARACTER, buildSystemPrompt, mockReply } from "./persona.js";
+import { CHARACTER, buildSystemPrompt, buildMemorizePrompt, mockProfile, mockReply } from "./persona.js";
 
 const ANTHROPIC_MODEL = "claude-sonnet-5";
+const ANTHROPIC_MEMORY_MODEL = "claude-haiku-4-5";  // cheap background distillation
+const MAX_PROFILE_CHARS = 4000;
+const PROFILE_TRUNCATE_CHARS = 2000;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
 const OPENAI_STT_MODEL = "gpt-4o-mini-transcribe";
 const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
@@ -78,7 +82,28 @@ function validateChatBody(body) {
         }
     }
     if (body.messages[0].role !== "user") return "first message must be from the user";
+    if (body.profile !== undefined && (typeof body.profile !== "string" || body.profile.length > MAX_PROFILE_CHARS)) {
+        return "profile must be a string of up to " + MAX_PROFILE_CHARS + " chars";
+    }
+    if (body.clientDate !== undefined && (typeof body.clientDate !== "string" || !DATE_RE.test(body.clientDate))) {
+        return "clientDate must be YYYY-MM-DD";
+    }
+    if (body.greeting !== undefined && (typeof body.greeting !== "string" || body.greeting.length > 300)) {
+        return "greeting must be a string of up to 300 chars";
+    }
     return null;
+}
+
+// The prompt-tail options shared by /chat: profile, date, and the greeting
+// actually spoken this session.
+function promptOpts(body) {
+    return {
+        profile: body.profile || null,
+        dateStr: (body.clientDate && DATE_RE.test(body.clientDate))
+            ? body.clientDate
+            : new Date().toISOString().slice(0, 10),
+        greeting: body.greeting || null,
+    };
 }
 
 async function fetchWithTimeout(url, options) {
@@ -128,7 +153,7 @@ async function handleChat(request, env, cors) {
                 model: ANTHROPIC_MODEL,
                 max_tokens: 300,
                 thinking: { type: "disabled" },
-                system: buildSystemPrompt(),
+                system: buildSystemPrompt(promptOpts(body)),
                 messages,
             }),
         });
@@ -197,6 +222,78 @@ async function handleSpeak(request, env, cors) {
     });
 }
 
+// Distill recent conversation turns into an updated memory profile. The
+// assistant turn is prefilled with "ABOUT HER:" so the whole completion IS
+// the profile — no JSON parsing to go wrong.
+async function handleMemorize(request, env, cors) {
+    let body;
+    try {
+        body = await request.json();
+    } catch {
+        return fail("bad_request", "Body must be JSON", 400, cors);
+    }
+    if (!Array.isArray(body.transcript) || body.transcript.length === 0 || body.transcript.length > 60) {
+        return fail("bad_request", "transcript must be an array of 1-60 turns", 400, cors);
+    }
+    for (const t of body.transcript) {
+        if (!t || (t.role !== "user" && t.role !== "assistant") ||
+            typeof t.content !== "string" || t.content.length === 0 || t.content.length > 2000) {
+            return fail("bad_request", "each turn needs role user|assistant and content of 1-2000 chars", 400, cors);
+        }
+    }
+    if (body.profile !== undefined && body.profile !== null &&
+        (typeof body.profile !== "string" || body.profile.length > MAX_PROFILE_CHARS)) {
+        return fail("bad_request", "profile must be a string of up to " + MAX_PROFILE_CHARS + " chars", 400, cors);
+    }
+
+    if (!env.ANTHROPIC_API_KEY) {
+        return json({ ok: true, profile: mockProfile(body.transcript), mock: true }, 200, cors);
+    }
+
+    const conversation = body.transcript
+        .map((t) => (t.role === "user" ? "Her: " : "Samantha: ") + t.content)
+        .join("\n");
+    const userMsg = "CURRENT PROFILE:\n" + (body.profile || "(empty — first conversation)") +
+        "\n\nNEW CONVERSATION:\n" + conversation;
+
+    let res;
+    try {
+        res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": env.ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                model: ANTHROPIC_MEMORY_MODEL,
+                max_tokens: 700,
+                thinking: { type: "disabled" },
+                system: buildMemorizePrompt(body.clientDate),
+                messages: [
+                    { role: "user", content: userMsg },
+                    { role: "assistant", content: "ABOUT HER:" },
+                ],
+            }),
+        });
+    } catch (err) {
+        if (err && err.name === "AbortError") {
+            return fail("timeout", "The memory service took too long", 504, cors);
+        }
+        return fail("upstream_error", "Could not reach the memory service", 502, cors);
+    }
+
+    if (!res.ok) return upstreamFail(res.status, cors);
+
+    const data = await res.json();
+    const textBlock = (data.content || []).find((b) => b.type === "text");
+    if (!textBlock || !textBlock.text) {
+        return fail("upstream_error", "The memory service returned an empty profile", 502, cors);
+    }
+    const profile = ("ABOUT HER:" + textBlock.text).slice(0, PROFILE_TRUNCATE_CHARS);
+    return json({ ok: true, profile, mock: false }, 200, cors);
+}
+
 // Speech-to-text: the app records mom's turn as one audio blob (no Android
 // recognizer beeps/gaps) and sends it here for transcription.
 async function handleTranscribe(request, env, cors) {
@@ -251,17 +348,20 @@ export default {
             }, 200, cors);
         }
 
-        if ((url.pathname === "/chat" || url.pathname === "/speak" || url.pathname === "/transcribe") &&
-            request.method === "POST") {
+        const guarded = {
+            "/chat": handleChat,
+            "/speak": handleSpeak,
+            "/transcribe": handleTranscribe,
+            "/memorize": handleMemorize,
+        };
+        if (guarded[url.pathname] && request.method === "POST") {
             if (request.headers.get("X-Talk-Token") !== env.TALK_APP_TOKEN) {
                 return fail("forbidden", "Missing or invalid app token", 403, cors);
             }
             if (overDailyLimit(env)) {
                 return fail("daily_limit", "Daily conversation limit reached", 429, cors);
             }
-            if (url.pathname === "/chat") return handleChat(request, env, cors);
-            if (url.pathname === "/speak") return handleSpeak(request, env, cors);
-            return handleTranscribe(request, env, cors);
+            return guarded[url.pathname](request, env, cors);
         }
 
         return fail("not_found", "Not found", 404, cors);
