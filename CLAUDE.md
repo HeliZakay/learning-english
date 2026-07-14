@@ -6,7 +6,7 @@ English-learning app Heli builds for her mom (Hebrew speaker, intermediate Engli
 
 A voice-call conversation with **Samantha** — a warm 67-year-old American retired florist in London who lived 15 years in Haifa (late husband Amnon), understands Hebrew, gently recasts mom's English mistakes without ever flagging them, and remembers her between conversations.
 
-**Roadmap: `talk-feature-plan.md` is the source of truth** — 30 stages, decisions table, checkboxes ticked as stages land. Currently stages 1–22 done (phases A–D); next is Phase E (23–25: vocabulary weaving, session recap, tap-to-define) then Phase F (26–30: polish + launch).
+**Roadmap: `talk-feature-plan.md` is the source of truth** — 30 stages, decisions table, checkboxes. **All planned work is shipped** (stages 1–22, 26, 29, 30). Stages 23–25 (vocab weaving, recap, tap-to-define) and 27–28 (streaming, persistent cost counters) are deliberately deferred until mom feedback. What remains: mom's supervised first conversation (launch checklist given to Heli), then feedback-driven fixes/iteration.
 
 ### Architecture
 
@@ -14,7 +14,8 @@ A voice-call conversation with **Samantha** — a warm 67-year-old American reti
 - **Worker**: `worker/` — Cloudflare Worker at `https://talk-worker.helizakay1.workers.dev`. Routes: `/ping` (open; returns character name+greeting), and token-guarded `/chat` (Claude claude-sonnet-5), `/speak` (OpenAI gpt-4o-mini-tts, voice "sage" + age/character instructions), `/transcribe` (gpt-4o-mini-transcribe), `/memorize` (claude-haiku-4-5 distills transcripts→profile), `/greet` (Sonnet personalized opener). Persona + all prompts live in `worker/src/persona.js`.
 - **Secrets**: ANTHROPIC_API_KEY + OPENAI_API_KEY set via `wrangler secret put` (never in code/chat). `TALK_APP_TOKEN` is a public tripwire (ships in talk.js; GitGuardian alert about it was intentionally ignored). Daily cap TALK_DAILY_LIMIT=600 (in-memory per-isolate; real accounting is stage 28).
 - **Deploy**: worker `cd worker && npx wrangler deploy` (Heli's Cloudflare account, already logged in). Site: `git push` → GitHub Pages.
-- **Memory (phase D)**: transcripts + profile in the phone's localStorage (`talk_transcripts`, `talk_profile`; also `talk_muted`, `talk_voice`, dev override `talk_worker_url`). Console helpers `talkMemoryDebug()` / `talkMemoryReset()`.
+- **Memory (phase D)**: transcripts + profile in the phone's localStorage (`talk_transcripts`, `talk_profile`; also `talk_muted`, `talk_voice`, `talk_onboarded`, dev override `talk_worker_url`). Console helpers `talkMemoryDebug()` / `talkMemoryReset()`.
+- **Final phase (26/29/30)**: screen wake lock held while chat is open; one-time Hebrew RTL onboarding (`#talkOnboarding`, its button doubles as the audio-unlock gesture); installable PWA — `manifest.json` (short_name "Samantha", standalone, start_url/scope `/learning-english/`), icons `images/icon-512/192.png` + `favicon-32.png` from Samantha's portrait.
 
 ### UX model (pure voice call — mom's explicit preference: "no text at all")
 
