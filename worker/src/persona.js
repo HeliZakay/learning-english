@@ -83,7 +83,9 @@ export function buildMemorizePrompt(clientDate) {
 
 Your task: merge the CURRENT PROFILE with any new facts from the NEW CONVERSATION, and output the complete updated profile — nothing else, no commentary.
 
-Format: a heading line "ABOUT HER:" followed by short "-" bullet lines (her name, family, health, work, worries, ongoing events, stories she told).
+Format: exactly two headings with short "-" bullet lines under each:
+ABOUT HER: (her name, family, health, work, worries, ongoing events, stories she told)
+HER ENGLISH: (recurring mistake patterns like dropped past tense, words or phrases she asked how to say, observations about her level — this helps Samantha gently support her learning)
 
 Rules:
 - Include ONLY things she herself said. Never infer, guess, or embellish. If you are unsure whether she said it, leave it out. Never include things Samantha said about herself.
@@ -94,7 +96,8 @@ Rules:
 
 export function mockProfile(transcript) {
     const userTurns = transcript.filter((t) => t.role === "user").length;
-    return "ABOUT HER:\n- (mock) She sent " + userTurns + " messages in the last conversation.";
+    return "ABOUT HER:\n- (mock) She sent " + userTurns + " messages in the last conversation.\n\n" +
+        "HER ENGLISH:\n- (mock) No notes yet.";
 }
 
 // Deterministic replies for mock mode (no API key configured), so the whole
