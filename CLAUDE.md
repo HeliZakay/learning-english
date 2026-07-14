@@ -4,7 +4,7 @@ English-learning app Heli builds for her mom (Hebrew speaker, intermediate Engli
 
 ## The Talk feature (the main ongoing project)
 
-A voice-call conversation with **Samantha** — a warm 67-year-old American retired florist in London who lived 15 years in Haifa (late husband Amnon), understands Hebrew, gently recasts mom's English mistakes without ever flagging them, and remembers her between conversations.
+A voice-call conversation with **Samantha** — a warm 67-year-old American retired florist in London who lived 15 years in Haifa (husband Amnon, alive and retired; no grandchildren yet, hopes for some), understands Hebrew, gently recasts mom's English mistakes without ever flagging them, and remembers her between conversations.
 
 **Roadmap: `talk-feature-plan.md` is the source of truth** — 30 stages, decisions table, checkboxes. **All planned work is shipped** (stages 1–22, 26, 29, 30). Stages 23–25 (vocab weaving, recap, tap-to-define) and 27–28 (streaming, persistent cost counters) are deliberately deferred until mom feedback. What remains: mom's supervised first conversation (launch checklist given to Heli), then feedback-driven fixes/iteration.
 
