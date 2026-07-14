@@ -62,13 +62,13 @@ Each stage is small, ends in something testable, and gets its own commit.
 **Memory notes:** everything lives in the phone's localStorage. Inspect from the browser console with `talkMemoryDebug()`; erase Samantha's whole memory with `talkMemoryReset()`.
 
 ### Phase E — Learning features (23–25)
-- [ ] **23. Vocabulary weaving** — character naturally uses words from her current app word batches.
-- [ ] **24. Session summary** — friendly end-of-chat recap: what went well, 2–3 gentle tips, nice new words that came up.
-- [ ] **25. Tap-to-define in chat** — reuse the glossary popover so any word in a bubble can be tapped.
+- [ ] **23. Vocabulary weaving** — character naturally uses words from her current app word batches. *(deferred until mom feedback)*
+- [ ] **24. Session summary** — friendly end-of-chat recap: what went well, 2–3 gentle tips, nice new words that came up. *(deferred until mom feedback)*
+- [ ] **25. Tap-to-define in chat** — reuse the glossary popover so any word in a bubble can be tapped. *(deferred until mom feedback)*
 
 ### Phase F — Polish & launch (26–30)
-- [ ] **26. Android pass** — layout, touch targets, keep screen awake during conversation.
-- [ ] **27. Latency tuning** — streaming responses, snappier round-trips.
-- [ ] **28. Cost safety** — usage counters in the worker, graceful daily limit message.
-- [ ] **29. Real-device testing + onboarding** — end-to-end runs on her phone model; a simple first-time explanation screen.
-- [ ] **30. Launch** — deploy, first supervised conversation with Mom, collect feedback and adjust.
+- [x] **26. Android pass** — layout, touch targets, keep screen awake during conversation.
+- [ ] **27. Latency tuning** — streaming responses, snappier round-trips. *(deferred — pipelining already covers the felt latency)*
+- [ ] **28. Cost safety** — usage counters in the worker, graceful daily limit message. *(deferred — token+origin+soft cap in place)*
+- [x] **29. Real-device testing + onboarding** — end-to-end runs on her phone model; a simple first-time explanation screen.
+- [x] **30. Launch** — deploy, first supervised conversation with Mom, collect feedback and adjust. *(code shipped; the supervised first conversation is the final step)*
