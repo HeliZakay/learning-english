@@ -37,6 +37,8 @@ const page = await browser.newPage({ viewport: { width: 400, height: 850 } }); /
 
 ## Gotchas
 
+- The Bash tool's cwd persists between calls (e.g. stays in `worker/` after a deploy). **Always `cd` to the repo root in the same command that starts `python3 -m http.server`**, or it silently serves the wrong directory and `#hamburgerBtn` never appears.
+
 - `GET /favicon.ico` 404s — pre-existing, ignore.
 - Under `file://`, reading `document.styleSheets[..].cssRules` throws SecurityError; check computed styles instead.
 - The app's top-level `const`s live in the global lexical scope (classic scripts), so `page.evaluate(() => typeof someGlobal)` works for globals from any script, but they are NOT on `window`.

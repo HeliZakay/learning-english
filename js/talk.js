@@ -73,6 +73,9 @@ function talkSetVoiceState(next) {
     if (next !== "listening") {
         document.getElementById("talkListenTranscript").textContent = "";
     }
+    if (next === "listening" || next === "idle") {
+        document.getElementById("talkHeardText").textContent = "";
+    }
 
     if (next === "speaking") {
         pill.textContent = "🔊 " + name + " is speaking...";
@@ -288,34 +291,19 @@ function talkOnCharacterDone(playedAny) {
 }
 
 // === Voice input (mom speaks) ===
+// One continuous MediaRecorder session per turn, transcribed server-side
+// (/transcribe → OpenAI). Unlike Android's SpeechRecognition, this has no
+// start/stop beeps, no status-bar flicker, and no deaf restart gaps.
 
 function talkMicSupported() {
-    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
 }
 
-function talkCreateRecognition() {
-    var Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
-    return Ctor ? new Ctor() : null;
-}
-
-var talkRec = null;              // active recognition instance, null when idle
-
-// One "turn" of listening spans several short recognition rounds: Android
-// Chrome ends recognition at every silence no matter what, so when a round
-// dies we quietly start another and keep collecting. Only the ✓ tap (done),
-// a fatal error, or ~3 empty rounds of silence truly ends the turn.
-var talkListenState = {
-    collected: "",       // finalized text from completed rounds
-    sessionFinal: "",    // finalized text within the current round
-    sessionInterim: "",  // LAST interim of the current round (Android sends
-                         // cumulative interims — concatenating them garbles)
-    errorCode: null,
-    done: false,         // she tapped ✓
-    emptyRounds: 0
-};
+var talkRecState = null;   // active recording turn, null when idle
+var TALK_MAX_RECORD_SECONDS = 90;   // safety cap if ✓ is never tapped
 
 function talkListening() {
-    return talkRec !== null;
+    return talkRecState !== null;
 }
 
 function talkListenStart() {
@@ -323,126 +311,142 @@ function talkListenStart() {
     // Never open the mic while Samantha's audio plays — it would hear her.
     // The only legal path from speaking to listening is talkInterrupt().
     if (talkState.voiceState === "speaking") return;
-    talkListenState = {
-        collected: "", sessionFinal: "", sessionInterim: "",
-        errorCode: null, done: false, emptyRounds: 0
-    };
-    talkListenRound();
+
+    var st = { recorder: null, stream: null, chunks: [], cancelled: false, startedAt: 0, timerId: null };
+    talkRecState = st;
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        if (talkRecState !== st) {   // cancelled while permission prompt was open
+            stream.getTracks().forEach(function (t) { t.stop(); });
+            return;
+        }
+        st.stream = stream;
+        var rec;
+        try {
+            rec = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        } catch (e) {
+            rec = new MediaRecorder(stream);
+        }
+        st.recorder = rec;
+        rec.ondataavailable = function (e) {
+            if (e.data && e.data.size) st.chunks.push(e.data);
+        };
+        rec.onstop = function () {
+            stream.getTracks().forEach(function (t) { t.stop(); });
+            if (st.timerId) clearInterval(st.timerId);
+            if (talkRecState !== st) return;
+            talkRecState = null;
+            talkListenUi(false);
+            if (st.cancelled) return;
+            talkTranscribeAndSend(new Blob(st.chunks, { type: rec.mimeType || "audio/webm" }));
+        };
+        rec.start();
+        st.startedAt = Date.now();
+        talkListenUi(true);
+        talkSetVoiceState("listening");
+        st.timerId = setInterval(function () {
+            if (talkRecState !== st) return;
+            var secs = Math.floor((Date.now() - st.startedAt) / 1000);
+            talkUpdatePendingBubble("🔴 " + Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2));
+            if (secs >= TALK_MAX_RECORD_SECONDS) talkListenDone();
+        }, 1000);
+    }).catch(function (err) {
+        if (talkRecState === st) talkRecState = null;
+        talkListenUi(false);
+        talkSetVoiceState("idle");
+        if (err && (err.name === "NotAllowedError" || err.name === "SecurityError")) {
+            talkOnListenFailed("not-allowed");
+        } else if (err && err.name === "NotFoundError") {
+            talkOnListenFailed("audio-capture");
+        } else {
+            talkOnListenFailed("error");
+        }
+    });
 }
 
-// Start one recognition round (also used to seamlessly continue after
-// Android's silence cut-offs).
-function talkListenRound() {
-    var rec = talkCreateRecognition();
-    if (!rec) return;
-    talkRec = rec;
-    talkListenState.sessionFinal = "";
-    talkListenState.sessionInterim = "";
-    talkListenState.errorCode = null;
-
-    rec.continuous = false;   // Android ends on silence anyway; we restart
-    rec.interimResults = true;
-    rec.lang = "en-US";
-    rec.maxAlternatives = 1;
-
-    rec.onstart = function () {
-        if (talkRec !== rec) return;
-        var mic = document.getElementById("talkMicBtn");
+// Mic button / pending bubble reflect whether we're recording.
+function talkListenUi(on) {
+    var mic = document.getElementById("talkMicBtn");
+    if (on) {
         mic.classList.add("talk-mic-listening");
         mic.textContent = "✓";   // while listening, the mic button means "I'm done"
-        talkSetVoiceState("listening");
-        if (!document.getElementById("talkPendingBubble")) talkShowPendingBubble();
-    };
-    rec.onresult = function (event) {
-        if (talkRec !== rec) return;
-        var finals = "", lastInterim = "";
-        for (var i = 0; i < event.results.length; i++) {
-            var t = event.results[i][0].transcript;
-            if (event.results[i].isFinal) finals += " " + t;
-            else lastInterim = t;   // keep only the last (cumulative on Android)
-        }
-        talkListenState.sessionFinal = finals;
-        talkListenState.sessionInterim = lastInterim;
-        talkUpdatePendingBubble(talkListenText() || "...");
-    };
-    rec.onerror = function (event) {
-        if (talkRec !== rec) return;
-        talkListenState.errorCode = event.error;
-    };
-    rec.onend = function () {
-        if (talkRec !== rec) return;  // stale round or cancelled
-        talkOnRecognitionEnd();
-    };
-    rec.start();
+        talkShowPendingBubble();
+    } else {
+        mic.classList.remove("talk-mic-listening");
+        mic.textContent = "🎤";
+        talkRemovePendingBubble();
+    }
 }
 
-// Everything she has said this turn, cleaned up.
-function talkListenText() {
-    return (talkListenState.collected + " " + talkListenState.sessionFinal +
-        " " + talkListenState.sessionInterim).replace(/\s+/g, " ").trim();
+// She tapped ✓: stop recording; onstop hands the audio to transcription.
+function talkListenDone() {
+    var st = talkRecState;
+    if (!st) return;
+    if (st.recorder && st.recorder.state !== "inactive") {
+        st.recorder.stop();
+    } else {
+        // Permission prompt still open — treat the tap as a cancel.
+        talkListenStop();
+    }
 }
 
 // Cancel listening without sending anything.
 function talkListenStop() {
-    if (!talkRec) return;
-    var rec = talkRec;
-    talkRec = null;               // onend sees a stale rec → pure cleanup
-    rec.onend = null;
-    rec.onresult = null;
-    rec.onerror = null;
-    try { rec.abort(); } catch (e) {}
-    var mic = document.getElementById("talkMicBtn");
-    mic.classList.remove("talk-mic-listening");
-    mic.textContent = "🎤";
-    talkRemovePendingBubble();
+    var st = talkRecState;
+    if (!st) return;
+    st.cancelled = true;
+    if (st.timerId) clearInterval(st.timerId);
+    if (st.recorder && st.recorder.state !== "inactive") {
+        st.recorder.stop();   // onstop cleans up; cancelled skips transcription
+    } else {
+        if (st.stream) st.stream.getTracks().forEach(function (t) { t.stop(); });
+        talkRecState = null;
+        talkListenUi(false);
+    }
     talkSetVoiceState("idle");
 }
 
-// She tapped ✓: finalize whatever was said and let onend send it.
-function talkListenDone() {
-    if (!talkRec) return;
-    talkListenState.done = true;
-    try { talkRec.stop(); } catch (e) {}
-}
-
-// A round ended (silence, ✓ tap via stop(), or an error).
-function talkOnRecognitionEnd() {
-    var s = talkListenState;
-    var sessionText = (s.sessionFinal + " " + s.sessionInterim).replace(/\s+/g, " ").trim();
-    var fatal = s.errorCode === "not-allowed" || s.errorCode === "service-not-allowed" ||
-        s.errorCode === "audio-capture" || s.errorCode === "network";
-
-    // Keep listening: she hasn't tapped ✓ and nothing fatal happened.
-    if (!s.done && !fatal) {
-        if (sessionText) {
-            s.collected = (s.collected + " " + sessionText).replace(/\s+/g, " ").trim();
-            s.emptyRounds = 0;
-        } else {
-            s.emptyRounds++;
-        }
-        // She said something already, or is still within the silence grace
-        // window — quietly start the next round.
-        if (s.collected || s.emptyRounds < 3) {
-            talkListenRound();
-            return;
-        }
-        // ~3 silent rounds and not a word: she's probably not there.
-    }
-
-    // Finish the turn.
-    talkRec = null;
-    var mic = document.getElementById("talkMicBtn");
-    mic.classList.remove("talk-mic-listening");
-    mic.textContent = "🎤";
-    talkRemovePendingBubble();
-
-    var text = (s.collected + " " + sessionText).replace(/\s+/g, " ").trim();
-    if (text) {
-        talkSendText(text);
+// Turn the recorded audio into text and send it to Samantha.
+function talkTranscribeAndSend(blob) {
+    if (blob.size < 2000) {   // essentially nothing was recorded
+        talkSetVoiceState("idle");
+        talkOnListenFailed("no-speech");
         return;
     }
-    talkSetVoiceState("idle");
-    talkOnListenFailed(s.errorCode);
+    talkSetVoiceState("thinking");
+    fetch(talkWorkerUrl().replace(/\/$/, "") + "/transcribe", {
+        method: "POST",
+        headers: {
+            "Content-Type": blob.type || "audio/webm",
+            "X-Talk-Token": TALK_APP_TOKEN
+        },
+        body: blob
+    }).then(function (res) {
+        return res.json();
+    }).then(function (data) {
+        if (!data || !data.ok) throw data && data.error;
+        var text = (data.text || "").trim();
+        if (!text) {
+            talkSetVoiceState("idle");
+            talkOnListenFailed("no-speech");
+            return;
+        }
+        talkShowHeard(text);
+        talkSendText(text);
+    }).catch(function (err) {
+        talkSetVoiceState("idle");
+        if (err && err.code === "daily_limit") {
+            talkShowHint("She's had a lot of conversations today and is resting. 🌙 Come back tomorrow!");
+        } else {
+            talkShowHint("She couldn't hear that — tap the microphone and try again.");
+        }
+    });
+}
+
+// "You said: ..." — shown with her portrait while she thinks/answers, so mom
+// can confirm the app heard her right.
+function talkShowHeard(text) {
+    document.getElementById("talkHeardText").textContent = "You said: “" + text + "”";
 }
 
 // No usable speech — explain kindly and leave mom in control.

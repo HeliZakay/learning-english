@@ -8,6 +8,8 @@ import { CHARACTER, buildSystemPrompt, mockReply } from "./persona.js";
 
 const ANTHROPIC_MODEL = "claude-sonnet-5";
 const OPENAI_TTS_MODEL = "gpt-4o-mini-tts";
+const OPENAI_STT_MODEL = "gpt-4o-mini-transcribe";
+const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
 const DEFAULT_VOICE = "sage";
 // Voice direction chosen in the tasting sessions (2026-07-14): mature age
 // anchor + "bold charm" character.
@@ -195,6 +197,43 @@ async function handleSpeak(request, env, cors) {
     });
 }
 
+// Speech-to-text: the app records mom's turn as one audio blob (no Android
+// recognizer beeps/gaps) and sends it here for transcription.
+async function handleTranscribe(request, env, cors) {
+    const audio = await request.blob();
+    if (!audio || audio.size === 0) return fail("bad_request", "No audio received", 400, cors);
+    if (audio.size > MAX_AUDIO_BYTES) return fail("bad_request", "Audio too large", 400, cors);
+
+    if (!env.OPENAI_API_KEY) {
+        return fail("stt_not_configured", "OPENAI_API_KEY is not set", 503, cors);
+    }
+
+    const type = (request.headers.get("Content-Type") || "audio/webm").split(";")[0];
+    const ext = { "audio/webm": "webm", "audio/mpeg": "mp3", "audio/mp4": "mp4", "audio/ogg": "ogg", "audio/wav": "wav" }[type] || "webm";
+    const form = new FormData();
+    form.append("file", audio, "speech." + ext);
+    form.append("model", OPENAI_STT_MODEL);
+
+    let res;
+    try {
+        res = await fetchWithTimeout("https://api.openai.com/v1/audio/transcriptions", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + env.OPENAI_API_KEY },
+            body: form,
+        });
+    } catch (err) {
+        if (err && err.name === "AbortError") {
+            return fail("timeout", "The transcription service took too long", 504, cors);
+        }
+        return fail("upstream_error", "Could not reach the transcription service", 502, cors);
+    }
+
+    if (!res.ok) return upstreamFail(res.status, cors);
+
+    const data = await res.json();
+    return json({ ok: true, text: typeof data.text === "string" ? data.text : "" }, 200, cors);
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -212,16 +251,17 @@ export default {
             }, 200, cors);
         }
 
-        if ((url.pathname === "/chat" || url.pathname === "/speak") && request.method === "POST") {
+        if ((url.pathname === "/chat" || url.pathname === "/speak" || url.pathname === "/transcribe") &&
+            request.method === "POST") {
             if (request.headers.get("X-Talk-Token") !== env.TALK_APP_TOKEN) {
                 return fail("forbidden", "Missing or invalid app token", 403, cors);
             }
             if (overDailyLimit(env)) {
                 return fail("daily_limit", "Daily conversation limit reached", 429, cors);
             }
-            return url.pathname === "/chat"
-                ? handleChat(request, env, cors)
-                : handleSpeak(request, env, cors);
+            if (url.pathname === "/chat") return handleChat(request, env, cors);
+            if (url.pathname === "/speak") return handleSpeak(request, env, cors);
+            return handleTranscribe(request, env, cors);
         }
 
         return fail("not_found", "Not found", 404, cors);

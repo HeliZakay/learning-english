@@ -226,6 +226,21 @@
     color: #6366F1;
 }
 
+/* "You said: ..." confirmation while she thinks/answers */
+.talk-heard-text {
+    font-size: 15px;
+    color: #6366F1;
+    text-align: center;
+    line-height: 1.4;
+    padding: 0 12px;
+    max-height: 84px;
+    overflow-y: auto;
+}
+
+.talk-heard-text:empty {
+    display: none;
+}
+
 /* While Samantha thinks, her portrait waits calmly (no glow) */
 .talk-speaking-view.thinking .talk-speaking-portrait {
     animation: none;
