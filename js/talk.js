@@ -47,7 +47,7 @@ function talkSetVoiceState(next) {
         pill.className = "talk-voice-status";
         pill.style.display = "";
     } else if (next === "listening") {
-        pill.textContent = "🎤 Listening... speak now";
+        pill.textContent = "🎤 Speak freely — tap ✓ when you finish";
         pill.className = "talk-voice-status listening";
         pill.style.display = "";
     } else if (next === "thinking") {
@@ -278,13 +278,19 @@ function talkListenStart() {
     talkRec = rec;
     talkListenState = { finalText: "", interimText: "", errorCode: null };
 
-    rec.continuous = false;       // Chrome ends on silence — that IS our turn-end
+    // Keep listening through thinking pauses — the turn ends only when she
+    // taps the ✓ button (real-phone feedback: silence-detection cut her off
+    // mid-thought). Chrome can still end on its own after long inactivity;
+    // onend handles both the tap and that case identically.
+    rec.continuous = true;
     rec.interimResults = true;
     rec.lang = "en-US";
     rec.maxAlternatives = 1;
 
     rec.onstart = function () {
-        document.getElementById("talkMicBtn").classList.add("talk-mic-listening");
+        var mic = document.getElementById("talkMicBtn");
+        mic.classList.add("talk-mic-listening");
+        mic.textContent = "✓";   // while listening, the mic button means "I'm done"
         talkSetVoiceState("listening");
         talkShowPendingBubble();
     };
@@ -317,19 +323,32 @@ function talkListenStop() {
     rec.onresult = null;
     rec.onerror = null;
     try { rec.abort(); } catch (e) {}
-    document.getElementById("talkMicBtn").classList.remove("talk-mic-listening");
+    var mic = document.getElementById("talkMicBtn");
+    mic.classList.remove("talk-mic-listening");
+    mic.textContent = "🎤";
     talkRemovePendingBubble();
     talkSetVoiceState("idle");
+}
+
+// She tapped ✓: finalize whatever was said and let onend send it.
+function talkListenDone() {
+    if (!talkRec) return;
+    try { talkRec.stop(); } catch (e) {}
 }
 
 // The single decision point: recognition ended (silence, error, or timeout).
 function talkOnRecognitionEnd() {
     if (!talkRec) return;         // already cancelled via talkListenStop
     talkRec = null;
-    document.getElementById("talkMicBtn").classList.remove("talk-mic-listening");
+    var mic = document.getElementById("talkMicBtn");
+    mic.classList.remove("talk-mic-listening");
+    mic.textContent = "🎤";
 
-    // Android sometimes never marks results final — promote the interim.
-    var text = talkListenState.finalText.trim() || talkListenState.interimText.trim();
+    // Send everything she said: finalized segments plus whatever was still
+    // interim when the turn ended (words spoken right before tapping ✓, or
+    // Android's known never-finalized results).
+    var text = (talkListenState.finalText + " " + talkListenState.interimText)
+        .replace(/\s+/g, " ").trim();
     if (text) {
         talkRemovePendingBubble();
         talkSendText(text);       // auto-send: she talks, it sends
@@ -411,7 +430,7 @@ function talkMicTap() {
         return;
     }
     if (talkListening()) {
-        talkListenStop();
+        talkListenDone();   // ✓ tap: finish the turn and send what she said
         return;
     }
     talkListenStart();
