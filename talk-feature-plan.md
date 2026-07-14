@@ -54,10 +54,12 @@ Each stage is small, ends in something testable, and gets its own commit.
 - [x] **18. Voice UX polish** — big button states, animations, "I didn't hear you" recovery. *(code verified headlessly; real-phone checklist pending)*
 
 ### Phase D — Memory (19–22)
-- [ ] **19. Transcripts** — save conversation history locally.
-- [ ] **20. Long-term memory** — after each session, extract facts (family, interests, events) into a profile fed to the character.
-- [ ] **21. Learning memory** — track words she struggled with and vocabulary already covered in the app.
-- [ ] **22. Continuity** — "welcome back" behavior; character asks about things from last time.
+- [x] **19. Transcripts** — save conversation history locally.
+- [x] **20. Long-term memory** — after each session, extract facts (family, interests, events) into a profile fed to the character.
+- [x] **21. Learning memory** — track words she struggled with and vocabulary already covered in the app.
+- [x] **22. Continuity** — "welcome back" behavior; character asks about things from last time.
+
+**Memory notes:** everything lives in the phone's localStorage. Inspect from the browser console with `talkMemoryDebug()`; erase Samantha's whole memory with `talkMemoryReset()`.
 
 ### Phase E — Learning features (23–25)
 - [ ] **23. Vocabulary weaving** — character naturally uses words from her current app word batches.
