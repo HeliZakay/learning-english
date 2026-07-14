@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My English Words</title>
+    <title>Samantha — English Practice</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
     <link rel="icon" href="images/favicon-32.png">
@@ -901,25 +901,25 @@
     </style>
 </head>
 <body>
-    <h1>My English Words</h1>
+    <h1>Samantha</h1>
 
     <div class="menu-wrap">
         <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
             <span class="hamburger-icon">☰</span>
-            <span class="hamburger-label" id="hamburgerLabel">Flashcards 1</span>
+            <span class="hamburger-label" id="hamburgerLabel">Talk</span>
         </button>
         <div class="mode-toggle" id="modeToggle">
-            <button class="mode-btn active" id="flashcardsTab">Flashcards 1</button>
+            <button class="mode-btn active" id="talkTab">Talk</button>
+            <button class="mode-btn" id="flashcardsTab">Flashcards 1</button>
             <button class="mode-btn" id="quizTab">Quiz 1</button>
             <button class="mode-btn" id="flashcards2Tab">Flashcards 2</button>
             <button class="mode-btn" id="quiz2Tab">Quiz 2</button>
             <button class="mode-btn" id="typeQuizTab">Type Quiz</button>
             <button class="mode-btn" id="storyTab">Story</button>
-            <button class="mode-btn" id="talkTab">Talk</button>
         </div>
     </div>
 
-    <div class="card-container">
+    <div class="card-container" style="display:none">
         <div class="card">
             <img class="card-image" id="cardImage" src="" alt="">
             <div class="word" id="word"></div>
@@ -927,9 +927,9 @@
         </div>
     </div>
 
-    <div class="progress" id="progress"></div>
+    <div class="progress" id="progress" style="display:none"></div>
 
-    <div class="btn-row">
+    <div class="btn-row" style="display:none">
         <button class="nav-btn" id="backBtn">← Back</button>
         <button class="nav-btn" id="nextBtn">Next →</button>
     </div>
@@ -3174,5 +3174,10 @@ Non-trivial words from the story, with their meaning **as they are used in the s
 
     </script>
     <script src="js/talk.js"></script>
+    <script>
+        // Samantha is the home screen: land on Talk when the app opens.
+        // Must run after both the main script (ttsState) and talk.js (startTalk).
+        switchMode("talk");
+    </script>
 </body>
 </html>
