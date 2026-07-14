@@ -61,7 +61,7 @@ function talkSetVoiceState(next) {
 
 // === Voice output (Samantha speaks) ===
 
-// Samantha's TTS voice; the default is set after the voice-tasting session.
+// Samantha's TTS voice — "nova" chosen in the voice-tasting session (2026-07-14).
 var TALK_DEFAULT_VOICE = "nova";
 
 function talkVoice() {
