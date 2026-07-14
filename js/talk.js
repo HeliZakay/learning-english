@@ -30,8 +30,9 @@ var talkState = {
     history: [],       // [{role, content}] API-shaped turns; greeting NOT included
     sending: false,
     started: false,    // chat screen entered this session
-    voiceState: "idle", // idle | thinking | speaking | listening
-    micDenied: false   // mic permission refused — stop auto-listening
+    voiceState: "idle", // idle | thinking | review | speaking | listening
+    micDenied: false,  // mic permission refused — stop auto-listening
+    pendingText: null  // transcript awaiting mom's approval (review state)
 };
 
 // Pure-voice conversation ("like a phone call") is the default whenever the
@@ -49,22 +50,26 @@ function talkSetVoiceState(next) {
     var name = talkState.character ? talkState.character.name : "She";
     var speakingView = document.getElementById("talkSpeakingView");
     var listenView = document.getElementById("talkListenView");
+    var reviewView = document.getElementById("talkReviewView");
     var listenHint = document.getElementById("talkListenHint");
 
     document.getElementById("talkChat").classList.toggle("talk-voice-mode", vm);
     mic.disabled = (next === "thinking");
     mic.classList.toggle("talk-mic-speaking", next === "speaking");
 
-    // Which big view fills the area: her portrait, the big mic, or the chat.
+    // Which big view fills the area: her portrait, the big mic, the review
+    // card, or the chat.
     var showPortrait = next === "speaking" || (vm && next === "thinking");
     var showBigMic = vm && (next === "listening" || next === "idle");
+    var showReview = vm && next === "review";
     speakingView.style.display = showPortrait ? "flex" : "none";
     speakingView.classList.toggle("thinking", next === "thinking");
     listenView.style.display = showBigMic ? "flex" : "none";
     listenView.classList.toggle("listening", next === "listening");
+    reviewView.style.display = showReview ? "flex" : "none";
     document.getElementById("talkMessages").style.display =
-        (showPortrait || showBigMic) ? "none" : "";
-    if (!showPortrait && !showBigMic) talkScrollDown();
+        (showPortrait || showBigMic || showReview) ? "none" : "";
+    if (!showPortrait && !showBigMic && !showReview) talkScrollDown();
     if (showBigMic) {
         listenHint.textContent = next === "listening"
             ? "Speak freely — tap when you finish"
@@ -75,6 +80,9 @@ function talkSetVoiceState(next) {
     }
     if (next === "listening" || next === "idle") {
         document.getElementById("talkHeardText").textContent = "";
+    }
+    if (next !== "review") {
+        talkState.pendingText = null;
     }
 
     if (next === "speaking") {
@@ -431,8 +439,12 @@ function talkTranscribeAndSend(blob) {
             talkOnListenFailed("no-speech");
             return;
         }
-        talkShowHeard(text);
-        talkSendText(text);
+        if (talkVoiceMode()) {
+            talkShowReview(text);   // pause: let mom approve before sending
+        } else {
+            talkShowHeard(text);
+            talkSendText(text);     // muted/text mode: send straight away
+        }
     }).catch(function (err) {
         talkSetVoiceState("idle");
         if (err && err.code === "daily_limit") {
@@ -447,6 +459,28 @@ function talkTranscribeAndSend(blob) {
 // can confirm the app heard her right.
 function talkShowHeard(text) {
     document.getElementById("talkHeardText").textContent = "You said: “" + text + "”";
+}
+
+// Show what was transcribed and wait: mom taps שליחה to send it to Samantha,
+// or שוב to throw it away and record again. Nothing reaches /chat until then.
+function talkShowReview(text) {
+    talkState.pendingText = text;
+    document.getElementById("talkReviewText").textContent = "“" + text + "”";
+    talkSetVoiceState("review");
+}
+
+function talkReviewSend() {
+    var text = talkState.pendingText;
+    talkState.pendingText = null;
+    if (!text) return;
+    talkShowHeard(text);   // keep "You said…" visible while she thinks/answers
+    talkSendText(text);
+}
+
+function talkReviewAgain() {
+    talkState.pendingText = null;
+    talkSetVoiceState("idle");
+    talkListenStart();     // permission already granted — mic reopens at once
 }
 
 // No usable speech — explain kindly and leave mom in control.
@@ -1130,6 +1164,8 @@ document.getElementById("talkSpeakingView").addEventListener("click", function (
     if (talkState.voiceState === "speaking") talkInterrupt();
 });
 document.getElementById("talkListenView").addEventListener("click", talkMicTap);
+document.getElementById("talkReviewSendBtn").addEventListener("click", talkReviewSend);
+document.getElementById("talkReviewAgainBtn").addEventListener("click", talkReviewAgain);
 if (!talkMicSupported()) {
     document.getElementById("talkMicBtn").style.display = "none";
 }
