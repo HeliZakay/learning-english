@@ -1,0 +1,5 @@
+# Claude Code local settings (contains personal permission grants and tokens)
+.claude/settings.json
+
+# macOS
+.DS_Store
