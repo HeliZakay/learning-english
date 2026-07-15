@@ -550,6 +550,7 @@ function talkShowPendingBubble() {
     talkRemovePendingBubble();
     var el = document.createElement("div");
     el.className = "talk-bubble talk-bubble-user talk-bubble-interim";
+    el.dir = "auto";
     el.id = "talkPendingBubble";
     el.textContent = "...";
     document.getElementById("talkMessages").appendChild(el);
@@ -1036,9 +1037,14 @@ function talkShowChat() {
         talkResolveGreeting(function (greeting) {
             talkState.greetingUsed = greeting;
             talkAppendBubble("character", greeting);
-            talkSetVoiceState("idle");
-            // In voice mode she greets out loud, then the mic opens by itself.
-            if (talkVoiceMode()) talkSpeak(greeting);
+            // In voice mode she speaks first, so stay on her "thinking"
+            // portrait until the greeting audio starts — flashing the mic
+            // for the fetch seconds invites mom to talk too early.
+            if (talkVoiceMode()) {
+                talkSpeak(greeting);
+            } else {
+                talkSetVoiceState("idle");
+            }
         });
     } else {
         talkSetVoiceState(talkState.voiceState);
@@ -1076,6 +1082,7 @@ function talkHideStarters() {
 function talkAppendBubble(kind, text) {
     var el = document.createElement("div");
     el.className = "talk-bubble talk-bubble-" + kind;
+    el.dir = "auto";   // Hebrew transcripts render right-to-left
     el.textContent = text;
     document.getElementById("talkMessages").appendChild(el);
     talkScrollDown();
