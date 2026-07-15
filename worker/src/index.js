@@ -352,6 +352,29 @@ async function handleGreet(request, env, cors) {
 
 // Speech-to-text: the app records mom's turn as one audio blob (no Android
 // recognizer beeps/gaps) and sends it here for transcription.
+
+// She only ever speaks Hebrew or English. Telling the model that up front
+// stops most of the Hebrew-heard-as-Arabic / English-heard-as-CJK misfires.
+const STT_PROMPT = "The speaker is an Israeli woman who speaks only English or Hebrew, never any other language. She may switch between English and Hebrew mid-sentence.";
+const ARABIC_SCRIPT_RE = /[؀-ۿݐ-ݿ]/;
+const CJK_SCRIPT_RE = /[぀-ヿ一-鿿가-힯]/;
+
+async function openaiTranscribe(env, audio, ext, language) {
+    const form = new FormData();
+    form.append("file", audio, "speech." + ext);
+    form.append("model", OPENAI_STT_MODEL);
+    form.append("prompt", STT_PROMPT);
+    if (language) form.append("language", language);
+    const res = await fetchWithTimeout("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + env.OPENAI_API_KEY },
+        body: form,
+    });
+    if (!res.ok) return { ok: false, status: res.status };
+    const data = await res.json();
+    return { ok: true, text: typeof data.text === "string" ? data.text : "" };
+}
+
 async function handleTranscribe(request, env, cors) {
     const audio = await request.blob();
     if (!audio || audio.size === 0) return fail("bad_request", "No audio received", 400, cors);
@@ -363,17 +386,10 @@ async function handleTranscribe(request, env, cors) {
 
     const type = (request.headers.get("Content-Type") || "audio/webm").split(";")[0];
     const ext = { "audio/webm": "webm", "audio/mpeg": "mp3", "audio/mp4": "mp4", "audio/ogg": "ogg", "audio/wav": "wav" }[type] || "webm";
-    const form = new FormData();
-    form.append("file", audio, "speech." + ext);
-    form.append("model", OPENAI_STT_MODEL);
 
-    let res;
+    let result;
     try {
-        res = await fetchWithTimeout("https://api.openai.com/v1/audio/transcriptions", {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + env.OPENAI_API_KEY },
-            body: form,
-        });
+        result = await openaiTranscribe(env, audio, ext);
     } catch (err) {
         if (err && err.name === "AbortError") {
             return fail("timeout", "The transcription service took too long", 504, cors);
@@ -381,10 +397,23 @@ async function handleTranscribe(request, env, cors) {
         return fail("upstream_error", "Could not reach the transcription service", 502, cors);
     }
 
-    if (!res.ok) return upstreamFail(res.status, cors);
+    if (!result.ok) return upstreamFail(result.status, cors);
 
-    const data = await res.json();
-    return json({ ok: true, text: typeof data.text === "string" ? data.text : "" }, 200, cors);
+    // Wrong-script guard: Arabic letters mean she spoke Hebrew, CJK letters
+    // mean she spoke English. One forced-language retry; if it fails for any
+    // reason, keep the first result rather than surfacing a new error to her.
+    const retryLang = ARABIC_SCRIPT_RE.test(result.text) ? "he"
+        : CJK_SCRIPT_RE.test(result.text) ? "en"
+        : null;
+    if (retryLang) {
+        console.log("transcribe: wrong script detected, retrying with language=" + retryLang);
+        try {
+            const retry = await openaiTranscribe(env, audio, ext, retryLang);
+            if (retry.ok) result = retry;
+        } catch (err) { /* keep the first result */ }
+    }
+
+    return json({ ok: true, text: result.text }, 200, cors);
 }
 
 export default {

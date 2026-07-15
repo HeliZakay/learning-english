@@ -1062,14 +1062,14 @@
             <div class="talk-speaking-view" id="talkSpeakingView" style="display:none">
                 <div class="talk-speaking-portrait">💬<img class="talk-avatar-img" src="images/samantha.png" alt="" onerror="this.style.display='none'"></div>
                 <div class="talk-speaking-name" id="talkSpeakingName"></div>
-                <div class="talk-heard-text" id="talkHeardText"></div>
+                <div class="talk-heard-text" id="talkHeardText" dir="auto"></div>
                 <div class="talk-speaking-text" id="talkSpeakingText"></div>
                 <div class="talk-speaking-hint">Tap to interrupt</div>
             </div>
             <!-- Voice mode: confirm what was heard before sending -->
             <div class="talk-review-view" id="talkReviewView" style="display:none">
                 <div class="talk-review-label">שמעתי:</div>
-                <div class="talk-review-text" id="talkReviewText"></div>
+                <div class="talk-review-text" id="talkReviewText" dir="auto"></div>
                 <div class="talk-review-actions">
                     <button class="talk-review-btn talk-review-again" id="talkReviewAgainBtn">🎤 שוב</button>
                     <button class="talk-review-btn talk-review-send" id="talkReviewSendBtn">שליחה ✓</button>
@@ -1089,7 +1089,7 @@
             <div class="talk-starters" id="talkStarters"></div>
             <div class="talk-composer">
                 <button class="talk-help-btn" id="talkHelpBtn" title="How do I say...?">?</button>
-                <input class="talk-input" id="talkInput" type="text" autocomplete="off"
+                <input class="talk-input" id="talkInput" type="text" autocomplete="off" dir="auto"
                        placeholder="Write in English...">
                 <button class="talk-mic-btn" id="talkMicBtn" aria-label="Speak">🎤</button>
                 <button class="talk-send-btn" id="talkSendBtn" aria-label="Send">➤</button>
